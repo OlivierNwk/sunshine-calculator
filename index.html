@@ -246,6 +246,7 @@ details.wb[open]>summary .chev{transform:rotate(90deg)}
 .simpi .s{font-size:11.5px;color:var(--muted)}
 .siminsp{border-top:1px solid var(--line);padding-top:10px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .siminsp:empty{display:none}
+.simshared{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--accent,#0B7A80) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--accent,#0B7A80) 40%,var(--line));font-size:14px}
 .hpwarn{padding:10px 12px;border-radius:10px;background:color-mix(in srgb,#E8A33D 16%,var(--surface));border:1px solid color-mix(in srgb,#E8A33D 50%,var(--line));font-size:13px;line-height:1.45;margin-bottom:4px}
 .hpct{display:flex;gap:10px;flex-wrap:wrap}.hpi{display:flex;align-items:center;gap:6px;font-size:13px}.hpi .inp{width:80px;min-height:36px}
 .langsw{display:flex;border:1px solid var(--line,#ddd);border-radius:8px;overflow:hidden}.langsw button{border:0;background:transparent;padding:6px 9px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;min-height:32px}.langsw button[aria-pressed=true]{background:var(--accent,#0B7A80);color:#fff}
@@ -419,10 +420,12 @@ details.wb[open]>summary .chev{transform:rotate(90deg)}
 
   <section class="view" id="v-sim" role="tabpanel" aria-labelledby="t-sim">
     <div class="help" data-help="sim"></div>
+    <div class="simshared" id="simshared" hidden></div>
     <div class="toolbar">
       <div class="field"><span class="lbl">Island</span><div class="pill-group" id="simisl"></div></div>
       <div class="field"><span class="lbl">Mode</span><div class="pill-group" id="simmode"></div></div>
       <div class="field"><span class="lbl">Reset</span><div class="pill-group"><button class="pill" id="simreset" type="button">Empty island</button><button class="pill" id="simgame" type="button">Olivier’s Haven (39 plots)</button></div></div>
+      <div class="field"><span class="lbl">Share</span><div class="pill-group"><button class="pill" id="simshare" type="button">🔗 Share this island</button></div></div>
     </div>
     <div class="simwrap">
       <div class="card simmapcard"><div class="simtools"><input class="inp" id="simq2" type="search" placeholder="Search building"><div class="simzoom"><button class="pill" type="button" data-zoom="-1" aria-label="Zoom out">−</button><button class="pill" type="button" data-zoom="1" aria-label="Zoom in">+</button></div></div><div class="simbar" id="simbar"></div><div class="simhint" id="simhint"></div><div class="simscroll" id="simscroll"><div class="simmap" id="simmap"></div></div><div class="simact" id="simact"></div><div class="siminsp" id="siminsp"></div></div>
@@ -524,8 +527,9 @@ const I18N_DICT={
 'Building or decoration':'Gebäude oder Deko','Upgrade costs per level from the wiki. Your levels from “My Buildings” are highlighted in yellow; below you see what is still needed to reach the max level.':'Ausbaukosten pro Level aus dem Wiki. Deine Level aus «Meine Gebäude» sind gelb markiert; darunter siehst du, was bis zum Max.-Level noch fehlt.','Still needed to max everything (this section)':'Noch nötig, um alles zu maximieren (dieser Bereich)','not upgraded':'nicht ausgebaut','Max level reached ✓':'Max.-Level erreicht ✓','Sections':'Bereiche','Images':'Bilder',
 'Island expansions':'Inselerweiterungen','One expansion is a 9×9 area. Enter above the number of the last expansion you bought.':'Eine Erweiterung ist eine 9×9-Fläche. Trage oben die Nummer der zuletzt gekauften Erweiterung ein.','Event island':'Event-Insel','Loyalty points':'Treuepunkte','Guild coins':'Gildenmünzen','Sea silver':'Meersilber','Candy':'Süssigkeiten','Delivery & Trade':'Lieferung & Handel','Inventory Capacity':'Lagerkapazität','Fishing Area':'Fischgebiet','Lure Capacity':'Köderkapazität','Rounds':'Runden','Reset':'Zurücksetzen','Topic, building, character…':'Thema, Gebäude, Figur…',
 'New report':'Neue Meldung','What do you report?':'Was meldest du?','Cruise task':'Kreuzfahrt-Aufgabe','Building':'Gebäude','Translation':'Übersetzung','Note (optional)':'Notiz (optional)','Anything that helps to check it':'Alles, was beim Prüfen hilft','Screenshot (required)':'Screenshot (Pflicht)','Send report':'Meldung senden','Sending…':'Wird gesendet…','Sent ✓':'Gesendet ✓','Your reports':'Deine Meldungen','All reports':'Alle Meldungen','All':'Alle','Open':'Offen','Accepted':'Übernommen','Rejected':'Abgelehnt','Accept':'Übernehmen','Reject':'Ablehnen','Reopen':'Wieder öffnen','Export (backup)':'Export (Backup)','No reports yet.':'Noch keine Meldungen.','Sign in to see your reports.':'Melde dich an, um deine Meldungen zu sehen.','Task / item':'Aufgabe / Ware','Amount':'Menge','Time':'Zeit','Tier (if known)':'Tier (falls bekannt)','Unknown':'Unbekannt','Nothing found.':'Nichts gefunden.','No results.':'Keine Ergebnisse.','Name':'Name','Size':'Grösse','Upgrade cost':'Ausbaukosten','Product':'Produkt','Building level':'Gebäudelevel','Amount per run':'Menge pro Durchgang','Time per run':'Zeit pro Durchgang','Topic':'Thema','English text':'Englischer Text','Correct German text':'Richtiger deutscher Text','Sign in with Google (top right) to send reports.':'Melde dich oben rechts mit Google an, um Meldungen zu senden.','Sign in with Google to send reports.':'Melde dich mit Google an, um Meldungen zu senden.','Enter at least the name of the task, item or building.':'Gib mindestens den Namen der Aufgabe, Ware oder des Gebäudes ein.','Add a screenshot so the values can be checked.':'Füge einen Screenshot hinzu, damit die Werte geprüft werden können.','Daily limit reached. Try again tomorrow.':'Tageslimit erreicht. Versuche es morgen wieder.','Sending failed. Check your connection and try again.':'Senden fehlgeschlagen. Prüfe deine Verbindung und versuche es nochmals.','Reports could not be loaded. Try again later.':'Meldungen konnten nicht geladen werden. Versuche es später nochmals.','Could not change the status.':'Status konnte nicht geändert werden.',
-'Data and images for upgrades, decorations, library costs, levels and the wiki section come from the':'Daten und Bilder für Ausbau, Dekos, Bibliothekskosten, Level und den Wiki-Bereich stammen aus dem',', licensed CC BY-SA. Production values come directly from the game. Unofficial fan site. <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>':', Lizenz CC BY-SA. Produktionswerte stammen direkt aus dem Spiel. Inoffizielle Fan-Seite.','Privacy':'Datenschutz','Coin costs are shown at 0% happiness.':'Münzkosten werden bei 0 % Zufriedenheit angezeigt.','Enter your happiness % per island below, otherwise the coin costs are usually much higher than in your game.':'Trage unten deine Zufriedenheits-% pro Insel ein, sonst sind die Münzkosten meist viel höher als in deinem Spiel.','Coin cost from happiness (%)':'Münzkosten durch Zufriedenheit (%)','Tap the happiness smiley in the game → “Happiness bonuses” and enter the % per island, e.g. −89 or +392. Used for all coin costs.':'Tippe im Spiel auf den Zufriedenheits-Smiley → «Happiness bonuses» und trage die % pro Insel ein, z. B. −89 oder +392. Gilt für alle Münzkosten.','This tool lives from the community.':'Dieses Tool lebt von der Community.','The developers do not publish the exact game numbers, so every value here comes from players. Please report new or wrong data with a screenshot. That is how the calculator gets better and more accurate for everyone.':'Die Entwickler veröffentlichen die genauen Zahlen des Spiels nicht – alle Werte hier stammen von Spielern. Bitte melde neue oder falsche Daten mit einem Screenshot. So wird der Rechner für alle besser und genauer.','Hide':'Ausblenden','Questions or feedback? Contact me on Discord:':'Fragen oder Feedback? Melde dich bei mir auf Discord:','Questions or something that does not fit here? Contact me on Discord:':'Fragen oder etwas, das hier nicht passt? Melde dich bei mir auf Discord:','Terms':'Nutzungsbedingungen','Sunshine Island Calculator logo':'Logo des Sunshine Island Rechners','Market orders':'Marktaufträge','Next level: 0 XP':'Nächstes Level: 0 XP','Level 1:':'Level 1:'};
+'Data and images for upgrades, decorations, library costs, levels and the wiki section come from the':'Daten und Bilder für Ausbau, Dekos, Bibliothekskosten, Level und den Wiki-Bereich stammen aus dem',', licensed CC BY-SA. Production values come directly from the game. Unofficial fan site. <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a>':', Lizenz CC BY-SA. Produktionswerte stammen direkt aus dem Spiel. Inoffizielle Fan-Seite.','Privacy':'Datenschutz','Share':'Teilen','🔗 Share this island':'🔗 Diese Insel teilen','✓ Link copied':'✓ Link kopiert','Copy failed':'Kopieren fehlgeschlagen','Your own simulator is not changed. Changes here are not saved.':'Dein eigener Simulator bleibt unverändert. Änderungen hier werden nicht gespeichert.','Copy to my simulator':'In meinen Simulator übernehmen','Close':'Schliessen','Coin costs are shown at 0% happiness.':'Münzkosten werden bei 0 % Zufriedenheit angezeigt.','Enter your happiness % per island below, otherwise the coin costs are usually much higher than in your game.':'Trage unten deine Zufriedenheits-% pro Insel ein, sonst sind die Münzkosten meist viel höher als in deinem Spiel.','Coin cost from happiness (%)':'Münzkosten durch Zufriedenheit (%)','Tap the happiness smiley in the game → “Happiness bonuses” and enter the % per island, e.g. −89 or +392. Used for all coin costs.':'Tippe im Spiel auf den Zufriedenheits-Smiley → «Happiness bonuses» und trage die % pro Insel ein, z. B. −89 oder +392. Gilt für alle Münzkosten.','This tool lives from the community.':'Dieses Tool lebt von der Community.','The developers do not publish the exact game numbers, so every value here comes from players. Please report new or wrong data with a screenshot. That is how the calculator gets better and more accurate for everyone.':'Die Entwickler veröffentlichen die genauen Zahlen des Spiels nicht – alle Werte hier stammen von Spielern. Bitte melde neue oder falsche Daten mit einem Screenshot. So wird der Rechner für alle besser und genauer.','Hide':'Ausblenden','Questions or feedback? Contact me on Discord:':'Fragen oder Feedback? Melde dich bei mir auf Discord:','Questions or something that does not fit here? Contact me on Discord:':'Fragen oder etwas, das hier nicht passt? Melde dich bei mir auf Discord:','Terms':'Nutzungsbedingungen','Sunshine Island Calculator logo':'Logo des Sunshine Island Rechners','Market orders':'Marktaufträge','Next level: 0 XP':'Nächstes Level: 0 XP','Level 1:':'Level 1:'};
 const I18N_SEG=[
+ [/^You are viewing a shared (.+) island\.$/,(m,a)=>'Du siehst eine geteilte Insel: '+a+'.'],
  [/^made in (.+)$/,(m,a)=>'hergestellt in '+i18nName(a)],[/^multiple allowed$/,()=>'mehrere erlaubt'],[/^1 per island$/,()=>'1 pro Insel'],[/^Limited Time Decoration$/,()=>'Zeitlich begrenzte Deko'],[/^Event$/,()=>'Event'],[/^Permanent$/,()=>'Permanent'],
  [/^from lvl (\d+)$/,(m,a)=>'ab Lvl '+a],[/^max level (\d+\??)$/,(m,a)=>'Max.-Level '+a],[/^up to level (\d+)$/,(m,a)=>'bis Level '+a],[/^(\d+) happiness$/,(m,a)=>a+' Zufriedenheit'],[/^rank (\d+\/\d+)$/,(m,a)=>'Rang '+a],
  [/^(.+) per hour$/,(m,a)=>i18nName(a)+' pro Stunde'],[/^(.+) vol\. (I+) level$/,(m,a,b)=>i18nName(a)+' Band '+b+' – Level'],[/^Max \+(\d+) per run$/,(m,a)=>'Max. +'+a+' pro Durchgang'],
@@ -605,20 +609,45 @@ const DEFAULT = () => ({v:1, hours:24, useLib:true, lib:{}, bld:{}, wb:{}, wlib:
 function normState(){
   Object.keys(S.bld||{}).forEach(n=>{ const g=S.bld[n]; if(!Array.isArray(g.g)) g.g=[{lv:g.lv||0,cnt:g.cnt||0}]; delete g.lv; delete g.cnt; const b=BLD[n]; if(b&&b.one){ g.g=[{lv:g.g[0].lv||0,cnt:1}]; } });
   (S.plan||[]).forEach(row=>{ if(!Array.isArray(row.grp)) row.grp=[{lv:row.lv||1,cnt:row.cnt??1}]; delete row.lv; delete row.cnt; });
+  if(SHARE) applyShare();
 }
 let S = DEFAULT();
 let failTries=0; let db=null, ref=null, saving=false, dirty=false, mode='loading', saveTimer=null;
 
 function setSave(cls, txt){ document.getElementById('savedot').className='dot '+cls; document.getElementById('savetxt').textContent=txt; }
+// ---------- shared simulator islands ----------
+let SHARE=null, SIMBACK=null;
+function saveState(){ return SHARE&&SIMBACK!==null?Object.assign({},S,{sim:SIMBACK}):S; }
+const b64u={ enc:u8=>{ let s=''; u8.forEach(b=>s+=String.fromCharCode(b)); return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); },
+  dec:t=>{ t=t.replace(/-/g,'+').replace(/_/g,'/'); const s=atob(t); return Uint8Array.from(s,c=>c.charCodeAt(0)); } };
+async function zip(str,inflate){ const cs=inflate?new DecompressionStream('deflate-raw'):new CompressionStream('deflate-raw');
+  const r=new Response(new Blob([inflate?str:new TextEncoder().encode(str)]).stream().pipeThrough(cs)); return inflate?await r.text():new Uint8Array(await r.arrayBuffer()); }
+async function simShareLink(){ const z=simS(); const isl=z.isl; const d=z.d[isl];
+  const o={v:1,isl,own:d.own,b:d.b,hrs:z.hrs||null,lib:z.lib||null};
+  let code; try{ code='z'+b64u.enc(await zip(JSON.stringify(o))); }catch(e){ code='j'+b64u.enc(new TextEncoder().encode(JSON.stringify(o))); }
+  return location.origin+location.pathname+'#sim='+code; }
+async function readShare(){ const m=/#sim=([A-Za-z0-9_-]+)/.exec(location.hash||''); if(!m) return null;
+  try{ const c=m[1]; const raw=c[0]==='z'?await zip(b64u.dec(c.slice(1)),true):new TextDecoder().decode(b64u.dec(c.slice(1)));
+    const o=JSON.parse(raw); if(!o||!ISLS.includes(o.isl)||!Array.isArray(o.own)||!Array.isArray(o.b)) return null; return o; }catch(e){ console.warn('share',e); return null; } }
+function applyShare(){ if(!SHARE) return; SIMBACK=JSON.parse(JSON.stringify(S.sim||{}));
+  const z=JSON.parse(JSON.stringify(S.sim||{})); S.sim=z; simS(); const m=SIM_MAPS[SHARE.isl];
+  z.isl=SHARE.isl; z.d[SHARE.isl]={own:SHARE.own.slice(),b:JSON.parse(JSON.stringify(SHARE.b)),sig:m.rows.join('')+'|'+m.free.join(';')};
+  if(SHARE.hrs) z.hrs=SHARE.hrs; if(SHARE.lib) z.lib=SHARE.lib; }
+function endShare(keep){ if(!SHARE) return; const isl=SHARE.isl;
+  if(keep){ const back=SIMBACK||{}; back.d=back.d||{}; back.d[isl]=S.sim.d[isl]; back.isl=isl; S.sim=back; }
+  else S.sim=SIMBACK||{};
+  SHARE=null; SIMBACK=null; history.replaceState(null,'',location.pathname+location.search); renderShareBar(); try{ renderSim(); }catch(e){} persist(); }
+function renderShareBar(){ const el=document.getElementById('simshared'); if(!el) return; el.hidden=!SHARE;
+  if(SHARE) el.innerHTML=`<div><b>You are viewing a shared ${esc(SHARE.isl)} island.</b> <span>Your own simulator is not changed. Changes here are not saved.</span></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn sm" id="sharekeep">Copy to my simulator</button><button type="button" class="pill" id="shareclose">Close</button></div>`; }
 function persist(){
   if(mode==='db'){ dirty=true; clearTimeout(saveTimer); saveTimer=setTimeout(flush,900); setSave('busy','Saving…'); }
-  else if(mode==='local'){ try{ localStorage.setItem('sir-state',JSON.stringify(S)); setSave('local','Saved in this browser only'); }catch(e){} }
+  else if(mode==='local'){ try{ localStorage.setItem('sir-state',JSON.stringify(saveState())); setSave('local','Saved in this browser only'); }catch(e){} }
 }
 async function flush(){
   if(saving||!dirty||!ref) return;
   saving=true; dirty=false;
   let failed=false;
-  try{ await ref.set(JSON.parse(JSON.stringify(S))); setSave('ok','Saved'); failTries=0; }
+  try{ await ref.set(JSON.parse(JSON.stringify(saveState()))); setSave('ok','Saved'); failTries=0; }
   catch(e){ failed=true; console.warn('save failed',e&&e.code,e&&e.message);
     if(e&&e.code==='invalid_argument'||++failTries>=4){ mode='local'; saving=false; persist(); showBanner('Saving to your account failed ('+esc((e&&(e.code||e.message))||'error')+'). Your changes are saved in this browser only for now.'); return; }
     dirty=true; setSave('busy','Save failed, retrying…'); }
@@ -1472,7 +1501,16 @@ async function loadWiki(){
 }
 renderAll();
 show(location.hash.slice(1));
-initStore(); i18nAll();
+(async()=>{ SHARE=await readShare(); if(SHARE){ applyShare(); } await initStore(); if(SHARE){ if(SIMBACK===null) applyShare(); renderShareBar(); const t=document.getElementById('t-sim'); if(t) t.click(); try{ renderSim(); }catch(e){} } })(); i18nAll();
+window.addEventListener('hashchange',()=>{ if(/#sim=/.test(location.hash)) location.reload(); });
+document.addEventListener('click',async e=>{
+  if(e.target.closest('#sharekeep')) return endShare(true);
+  if(e.target.closest('#shareclose')) return endShare(false);
+  const b=e.target.closest('#simshare'); if(!b) return;
+  const url=await simShareLink(); let ok=false;
+  if(navigator.share&&/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)){ try{ await navigator.share({title:'Sunshine Island – '+simS().isl,url}); ok=true; }catch(err){ if(err&&err.name==='AbortError') return; } }
+  if(!ok){ try{ await navigator.clipboard.writeText(url); ok=true; }catch(err){} }
+  const t=b.textContent; b.textContent=ok?'✓ Link copied':'Copy failed'; if(!ok) prompt('Link:',url); setTimeout(()=>b.textContent=t,2500); });
 loadWiki();
 
 const HELP={
