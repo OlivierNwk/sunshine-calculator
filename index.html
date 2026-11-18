@@ -1640,7 +1640,7 @@ function buildCheck(){ const L=[]; const add=(area,st,name,det,rep)=>L.push({are
       let st=(bo===''||co===''||co==null)?'miss':'unv'; if(row[0]==='Iron Sheets Bonus'&&i===1) st='uns'; if(row[0]==='Iron Sheets Bonus'&&i===4) st='ok'; if(row[0].startsWith('Embroided Tunic')&&i===4) st=co?'ok':st;
       add('lib',st,nm,st==='miss'?(bo===''?'Bonus and cost missing':'Cost missing'):'',{k:'other',item:'Library: '+nm}); } }));
     ['Haven','Tropicalis','Jade'].forEach(isl=>{ const rows=W.lvl[isl]||[]; const have=new Set(rows.map(r=>+r[0])); for(let n=5;n<=48;n++) add('exp',have.has(n)?'unv':'miss','#'+n,isl,{k:'other',isl,item:'Expansion #'+n}); });
-    W.b.forEach(b=>{ const isDeco=!b.h||/Decoration|Event|Permanent/.test(b.type)&&!(b.u||[]).length;
+    W.b.forEach(b=>{ if(/^(Library|Marketplace)$/.test(b.n)) return; const isDeco=!b.h||/Decoration|Event|Permanent/.test(b.type)&&!(b.u||[]).length;
       if((b.u||[]).length){ b.u.forEach(r=>{ const miss=(r[3]===''||r[3]==null); add('upg',miss?'miss':'unv',b.n+' · Lv '+r[0],b.loc||'',{k:'building',isl:b.loc,item:b.n,lv:r[0]}); }); }
       else if((b.d||[]).length){ b.d.forEach(r=>add('deco',r[2]===''?'miss':'unv',b.n+' · Lv '+r[0],'Island: '+(b.loc||'?'),{k:'deco',isl:b.loc,item:b.n,lv:r[0]})); }
       else if(isDeco) add('deco','miss',b.n,'Island: '+(b.loc||'?')+' · No level data',{k:'deco',isl:b.loc,item:b.n}); });
