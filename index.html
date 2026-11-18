@@ -1685,7 +1685,7 @@ function renderSetup(){ try{ newsDots(); }catch(_){}
     el.innerHTML=`<div class="stxt"><b>Set up “My game” first</b> <span>so the numbers match your game.</span> <span class="lbl">Still open:</span> ${miss.map(m=>`<span class="mtag">${m}</span>`).join(' ')}</div><button type="button" class="btn sm" data-go="${!st.b?'gebaeude':!st.l?'bibliothek':'mein'}">Set up</button>`; }
   else el.hidden=true;
   i18nAll(); }
-function show(v){ if(!VIEWS.includes(v)) v='planer';
+function show(v){ { const m=/^check-(prod|coin|lib|exp|cruise|upg|deco)$/.exec(v||''); if(m){ CKF.area=m[1]; CKF.st='todo'; v='check'; } } if(!VIEWS.includes(v)) v='planer';
   curGroup=groupOf(v); GLAST[curGroup]=v;
   document.querySelectorAll('.grp').forEach(g=>g.setAttribute('aria-pressed',String(g.dataset.g===curGroup)));
   document.querySelectorAll('.tab').forEach(t=>{ t.hidden=groupOf(t.dataset.v)!==curGroup||(t.id==='t-submit'&&!WEB); });
