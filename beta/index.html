@@ -679,8 +679,8 @@ let WI = {};
 let WREADY=false;
 const LAB={SoftCurrency:'Coins',HardCurrency:'Gems',hammer:'Hammers',nails:'Nails',experience:'XP',time:'Time',globalHappiness:'Happiness',havenPopulation:'Population Haven',tropicalPopulation:'Population Tropicalis',jadePopulation:'Population Jade',pens:'Pens',books:'Books',upgrade:'Bonus',loyaltyPoints:'Loyalty points',deeds:'Deeds',shovels:'Shovels',guildCoins:'Guild coins',seaSilver:'Sea silver'};
 const lab = k => LAB[k] || k.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,c=>c.toUpperCase());
-const ri = k => WI['Icon-resource-'+k] ? `<img class="ri" src="../${WI['Icon-resource-'+k]}" alt="${esc(lab(k))}" title="${esc(lab(k))}">` : `<span class="lbl">${esc(lab(k))}</span>`;
-const wimg = (k,cls='') => WI[k] ? `<img src="../${WI[k]}" alt="" loading="lazy" class="${cls}">` : '';
+const ri = k => WI['Icon-resource-'+k] ? `<img class="ri" src="${WI['Icon-resource-'+k]}" alt="${esc(lab(k))}" title="${esc(lab(k))}">` : `<span class="lbl">${esc(lab(k))}</span>`;
+const wimg = (k,cls='') => WI[k] ? `<img src="${WI[k]}" alt="" loading="lazy" class="${cls}">` : '';
 const num = v => { const n=parseFloat(String(v??'').replace(/[^0-9.\-]/g,'')); return isNaN(n)?0:n; };
 const cell = v => { v=String(v??''); return /^-?\d{4,}$/.test(v) ? fmt(+v) : esc(v); };
 const tok = s => esc(s).replace(/\{([A-Za-z]+)\}/g,(_,k)=>ri(k)+' ');
@@ -689,8 +689,8 @@ const ISLS = ['Haven','Tropicalis','Jade'];
 const fmt = n => (Math.round(n)).toLocaleString('en-US');
 const fmt1 = n => (Math.round(n*10)/10).toLocaleString('en-US');
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const icon = (n,cls='') => (ICMAP.i[n]&&WI[ICMAP.i[n]]) ? `<img src="../${WI[ICMAP.i[n]]}" alt="" class="${cls}">` : IC.i[n] ? `<img src="../${IC.i[n]}" alt="" class="${cls}">` : `<span aria-hidden="true" style="font-weight:800;color:var(--muted)">${esc((n||'?')[0])}</span>`;
-const bicon = n => (ICMAP.b[n]&&WI[ICMAP.b[n]]) ? `<img src="../${WI[ICMAP.b[n]]}" alt="">` : IC.b[n] ? `<img src="../${IC.b[n]}" alt="">` : '';
+const icon = (n,cls='') => (ICMAP.i[n]&&WI[ICMAP.i[n]]) ? `<img src="${WI[ICMAP.i[n]]}" alt="" class="${cls}">` : IC.i[n] ? `<img src="${IC.i[n]}" alt="" class="${cls}">` : `<span aria-hidden="true" style="font-weight:800;color:var(--muted)">${esc((n||'?')[0])}</span>`;
+const bicon = n => (ICMAP.b[n]&&WI[ICMAP.b[n]]) ? `<img src="${WI[ICMAP.b[n]]}" alt="">` : IC.b[n] ? `<img src="${IC.b[n]}" alt="">` : '';
 const REC = {}; D.rec.forEach(r=>REC[r.p]=r);
 const BLD = {}; D.blds.forEach(b=>BLD[b.n]=b);
 // row arrays: [lv, coins, q1, q2, min, out, out2, cycles, xp]
@@ -1181,7 +1181,7 @@ function renderWiki(){
   const out=document.getElementById('wout');
   if(WCAT[wCat]==='img'){
     const ks=Object.keys(WI).filter(k=>!q||k.toLowerCase().replace(/_/g,' ').includes(q)).sort((a,b)=>a.localeCompare(b));
-    out.innerHTML=`<p class="note" style="padding:0 0 12px">${ks.length} images from the wiki</p><div class="gal">${ks.map(k=>`<figure><img src="../${WI[k]}" alt="" loading="lazy"><figcaption>${esc(k.replace(/^Icon-resource-/,'').replace(/_/g,' '))}</figcaption></figure>`).join('')}</div>`;
+    out.innerHTML=`<p class="note" style="padding:0 0 12px">${ks.length} images from the wiki</p><div class="gal">${ks.map(k=>`<figure><img src="${WI[k]}" alt="" loading="lazy"><figcaption>${esc(k.replace(/^Icon-resource-/,'').replace(/_/g,' '))}</figcaption></figure>`).join('')}</div>`;
     return;
   }
   const cats=WCAT[wCat];
@@ -1501,7 +1501,7 @@ function renderSim(){
     h+=`<div class="simcell ${own?'own':buy?'buy':'lock'}${free?' free':''}" data-cell="${k}" style="left:${c*SIMU*u+1}px;top:${r*SIMU*u+1}px;width:${SIMU*u-2}px;height:${SIMU*u-2}px">${buy&&simMode==='expand'&&nextRow?`<span class="ex">#${nextNo}</span>`:''}</div>`; });
   h+=`<div class="simgridl" style="background-size:${u}px ${u}px"></div>`;
   d.b.forEach((p,i)=>{ const b=simB(p.n); const img=b?(WI[b.img]||(appName(b)&&ICMAP.b[appName(b)]&&WI[ICMAP.b[appName(b)]])||''):''; const L=b?ISL[b.loc]:'';
-    h+=`<div class="simb${simSel===i?' sel':''}${p.off?' off':''}" data-sb="${i}" style="--isl:${L||'#0B7A80'};left:${p.x*u}px;top:${p.y*u}px;width:${p.w*u}px;height:${p.h*u}px" title="${esc(p.n)} · level ${p.lv}">${img?`<img src="../${img}" alt="">`:`<div class="nm">${esc(p.n)}</div>`}<span class="lv">${p.lv}</span></div>`; });
+    h+=`<div class="simb${simSel===i?' sel':''}${p.off?' off':''}" data-sb="${i}" style="--isl:${L||'#0B7A80'};left:${p.x*u}px;top:${p.y*u}px;width:${p.w*u}px;height:${p.h*u}px" title="${esc(p.n)} · level ${p.lv}">${img?`<img src="${img}" alt="">`:`<div class="nm">${esc(p.n)}</div>`}<span class="lv">${p.lv}</span></div>`; });
   if(simGhost) h+=`<div class="simghost${simGhost.ok?'':' bad'}" style="left:${simGhost.x*u}px;top:${simGhost.y*u}px;width:${simGhost.w*u}px;height:${simGhost.h*u}px"></div>`;
   map.innerHTML=h;
   // hint
@@ -1521,10 +1521,10 @@ function renderSim(){
   const groups={}; list.forEach(b=>{ const t=btype(b); (groups[t]=groups[t]||[]).push(b); });
   document.getElementById('simpal').innerHTML=['Production','Houses & Town hall','Decoration','Other'].filter(t=>groups[t]).map(t=>`<h4>${t}</h4>`+groups[t].map(b=>{ const [w,hh]=simSize(b); const once=b.type==='One Time Build'||/Townhall|Library|Marketplace|Warehouse/.test(b.n); const dis=once&&ones.has(b.n);
     const img=WI[b.img]||(appName(b)&&ICMAP.b[appName(b)]&&WI[ICMAP.b[appName(b)]])||'';
-    return `<button type="button" class="simpi" data-sp="${esc(b.n)}" aria-pressed="${simPend&&simPend.n===b.n}"${dis?' disabled style="opacity:.45"':''}>${img?`<img src="../${img}" alt="">`:'<span style="width:40px"></span>'}<span><div class="t">${esc(b.n)}</div><div class="s">${w*3}×${hh*3}${once?' · 1 per island':''}${dis?' · placed':''}</div></span></button>`; }).join('')).join('');
+    return `<button type="button" class="simpi" data-sp="${esc(b.n)}" aria-pressed="${simPend&&simPend.n===b.n}"${dis?' disabled style="opacity:.45"':''}>${img?`<img src="${img}" alt="">`:'<span style="width:40px"></span>'}<span><div class="t">${esc(b.n)}</div><div class="s">${w*3}×${hh*3}${once?' · 1 per island':''}${dis?' · placed':''}</div></span></button>`; }).join('')).join('');
   const GO=['Production','Houses & Town hall','Decoration','Other']; document.getElementById('simbar').innerHTML=list.length?list.slice().sort((x,y)=>GO.indexOf(btype(x))-GO.indexOf(btype(y))).map(b=>{ const [w,hh]=simSize(b); const once=b.type==='One Time Build'||/Townhall|Library|Marketplace|Warehouse/.test(b.n); const dis=once&&ones.has(b.n);
     const img=WI[b.img]||(appName(b)&&ICMAP.b[appName(b)]&&WI[ICMAP.b[appName(b)]])||'';
-    return `<button type="button" class="simpi" data-sp="${esc(b.n)}" aria-pressed="${simPend&&simPend.n===b.n}"${dis?' disabled style="opacity:.45"':''}>${img?`<img src="../${img}" alt="">`:''}<div class="t">${esc(b.n)}</div><div class="s">${w*3}×${hh*3}${dis?' · placed':''}</div></button>`; }).join(''):'<span class="lbl">No building found.</span>';
+    return `<button type="button" class="simpi" data-sp="${esc(b.n)}" aria-pressed="${simPend&&simPend.n===b.n}"${dis?' disabled style="opacity:.45"':''}>${img?`<img src="${img}" alt="">`:''}<div class="t">${esc(b.n)}</div><div class="s">${w*3}×${hh*3}${dis?' · placed':''}</div></button>`; }).join(''):'<span class="lbl">No building found.</span>';
   // action bar
   const act=document.getElementById('simact');
   if(simMode==='build'&&simPend){ const g=simGhost;
@@ -1662,7 +1662,7 @@ async function drawSubs(){
   el.innerHTML=list.length?list.map(s=>{ const n=agree[subKey(s)].size; const st=s.status||'new';
     return `<div class="subitem"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${esc((SUBK[s.kind]||SUBK.other).lbl)}: ${esc(s.item||s.bld||'')}</b><span class="subst ${st}">${st==='new'?'Open':st==='accepted'?'Accepted':'Rejected'}</span>${n>1?`<span class="subcnt">${n} players report the same</span>`:''}<span class="lbl" style="margin-left:auto">${owner?esc(s._name||(names[s._u]&&names[s._u].name)||'Someone')+' · ':''}${s.at?new Date(s.at).toLocaleDateString():''}</span></div>
       <div>${subLine(s)}</div>${s.note?`<div class="lbl">“${esc(s.note)}”</div>`:''}
-      <div class="imgs">${(s._urls||[]).map(u=>`<a href="../${esc(u)}" target="_blank" rel="noopener"><img src="../${esc(u)}" alt="Screenshot"></a>`).join('')}</div>
+      <div class="imgs">${(s._urls||[]).map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(u)}" alt="Screenshot"></a>`).join('')}</div>
       ${owner&&subApply===String(s._id)?ovrForm(s):''}${owner?`<div style="display:flex;gap:8px"><button type="button" class="pill" ${WEB&&OVRK[s.kind]&&st==='new'?`data-ovopen="${esc(String(s._id))}"`:'data-subset="accepted"'} data-u="${esc(s._u)}" data-i="${esc(s._id)}">Accept</button><button type="button" class="pill" data-subset="rejected" data-u="${esc(s._u)}" data-i="${esc(s._id)}">Reject</button>${st!=='new'?`<button type="button" class="pill" data-subset="new" data-u="${esc(s._u)}" data-i="${esc(s._id)}">Reopen</button>`:''}</div>`:''}</div>`; }).join(''):'<span class="lbl">No reports yet.</span>';
 }
 document.getElementById('v-submit').addEventListener('click',async e=>{ let t;
@@ -1687,7 +1687,7 @@ document.getElementById('v-submit').addEventListener('click',async e=>{ let t;
 async function shrinkImg(f){ try{ const bmp=await createImageBitmap(f); const sc=Math.min(1,1400/Math.max(bmp.width,bmp.height)); const c=document.createElement('canvas'); c.width=Math.round(bmp.width*sc); c.height=Math.round(bmp.height*sc); c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
   const b=await new Promise(r=>c.toBlob(r,'image/webp',0.8)); if(b&&b.type==='image/webp') return b; return await new Promise(r=>c.toBlob(r,'image/jpeg',0.82)); }catch(_){ return f; } }
 function alertSub(m){ document.getElementById('suberr').textContent=m; }
-document.getElementById('subimg').addEventListener('change',e=>{ subFiles=[...e.target.files].slice(0,4); document.getElementById('subprev').innerHTML=subFiles.map(f=>`<img src="../${URL.createObjectURL(f)}" alt="">`).join(''); alertSub(''); });
+document.getElementById('subimg').addEventListener('change',e=>{ subFiles=[...e.target.files].slice(0,4); document.getElementById('subprev').innerHTML=subFiles.map(f=>`<img src="${URL.createObjectURL(f)}" alt="">`).join(''); alertSub(''); });
 document.getElementById('subform').addEventListener('submit',async e=>{ e.preventDefault(); if(subBusy) return;
   if(!db||!MYID) return alertSub(WEB?'Sign in with Google to send reports.':'Sign in to Claude to send reports.');
   const s={kind:subKind,at:Date.now(),status:'new'}; document.querySelectorAll('#subfields [data-sk]').forEach(x=>{ const v=x.value.trim(); if(v!=='') s[x.dataset.sk]=x.type==='number'?+v:v; });
