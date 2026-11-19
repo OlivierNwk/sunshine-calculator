@@ -1251,8 +1251,8 @@ function ctInfo(now){ now=now||Date.now(); const D=864e5; let k=Math.floor((now-
 function ctFmt(d){ return LANG==='de'?d.getUTCDate()+'.'+(d.getUTCMonth()+1)+'.':d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}); }
 function ctTitle(){ const c=ctInfo(); return GL('Kreuzfahrt-Turnier ','Cruise tournament ')+ctFmt(c.s)+'–'+ctFmt(c.e); }
 function ctLine(){ const c=ctInfo(); const d=Math.max(0,Math.ceil((c.live?c.e:c.s)-Date.now())/864e5|0);
-  return c.live?GL(`🛳️ Kreuzfahrt-Turnier läuft (Montag ${ctFmt(c.s)} bis Montag ${ctFmt(c.e)} in der Nacht)`,`🛳️ Cruise tournament running (Monday ${ctFmt(c.s)} to Monday ${ctFmt(c.e)}, overnight)`)
-    :GL(`📅 Nächstes Kreuzfahrt-Turnier: Montag ${ctFmt(c.s)} bis Montag ${ctFmt(c.e)}. Dazwischen: Gilden- und Einzelturnier.`,`📅 Next cruise tournament: Monday ${ctFmt(c.s)} to Monday ${ctFmt(c.e)}. In between: guild and solo tournament.`); }
+  return c.live?GL(`🛳️ Kreuzfahrt-Turnier läuft (${ctFmt(c.s)}–${ctFmt(c.e)})`,`🛳️ Cruise tournament running (${ctFmt(c.s)}–${ctFmt(c.e)})`)
+    :GL(`📅 Nächstes Kreuzfahrt-Turnier: ${ctFmt(c.s)}–${ctFmt(c.e)}`,`📅 Next cruise tournament: ${ctFmt(c.s)}–${ctFmt(c.e)}`); }
 function gSave(){ try{ localStorage.setItem('sic-guild-beta',JSON.stringify(GD)); }catch(_){} }
 function gLead(){ return GD&&(GD.role==='lead'||GD.role==='co'); }
 function gTime(t){ const T=CRUISE.find(x=>x[0]===t.isl&&x[1]===t.item); if(!T||T[0]==='Other') return '–'; const rs=cRecipes(t.item); if(!rs.length) return '–';
