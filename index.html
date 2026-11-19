@@ -379,7 +379,7 @@ details.wb[open]>summary .chev{transform:rotate(90deg)}
     <button type="button" class="grp me" data-g="me"><span class="gi" aria-hidden="true">👤</span><span>My game</span><span class="gbadge" id="gbadge"></span></button>
     <button type="button" class="grp" data-g="plan"><span class="gi" aria-hidden="true">🧮</span><span>Plan</span></button>
     <button type="button" class="grp" data-g="look"><span class="gi" aria-hidden="true">📖</span><span>Look up</span><span class="ndot g" id="gdot" hidden></span></button>
-    <button type="button" class="grp" data-g="guild" id="g-guild" hidden><span class="gi" aria-hidden="true">🛡️</span><span>Guild</span></button>
+    <button type="button" class="grp" data-g="guild" id="g-guild"><span class="gi" aria-hidden="true">🛡️</span><span>Guild</span></button>
     <button type="button" class="grp" data-g="help" id="g-help"><span class="gi" aria-hidden="true">🤝</span><span>Contribute</span></button>
   </nav>
   <nav class="tabs" role="tablist" aria-label="Sections">
@@ -771,7 +771,7 @@ function authBox(){ const el=document.getElementById('authbox'); if(!WEB) return
     el.innerHTML=`<span class="who">${esc(n)}${ISADMIN?' · Admin':''}</span><button class="pill" type="button" id="signout">Sign out</button>`; }
   else el.innerHTML='<button class="btn" type="button" id="signin">Sign in with Google</button>'; }
 document.addEventListener('click',async e=>{ if(!SB) return;
-  if(e.target.closest('#signin')){ await SB.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}}); }
+  if(e.target.closest('#signin')){ try{ if(e.target.closest('#gilde')) localStorage.setItem('sic-after-login','gilde'); }catch(_){} await SB.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}}); }
   else if(e.target.closest('#signout')){ await SB.auth.signOut(); location.reload(); } });
 async function initWeb(){
   SB=window.supabase.createClient(SIC_CONFIG.supabaseUrl,SIC_CONFIG.supabaseKey);
@@ -790,7 +790,7 @@ async function initWeb(){
     clearTimeout(timer); if(mode!=='loading') return; mode='db';
     if(data&&data.data){ S=Object.assign(DEFAULT(),JSON.parse(JSON.stringify(data.data))); normState(); setSave('ok','Save loaded'); }
     else { let had=false; try{ had=!!localStorage.getItem('sir-state'); }catch(_){} if(had){ loadLocal(); dirty=true; flush(); setSave('ok','Browser save moved to your account'); } else setSave('ok','New save – saved automatically'); }
-    authBox(); renderAll();
+    authBox(); renderAll(); gRefresh();
   }catch(e){
     clearTimeout(timer); if(mode!=='loading') return;
     mode='local'; loadLocal(); authBox(); renderAll(); setSave('local','Saved in this browser only');
@@ -1236,90 +1236,143 @@ function applyOvr(o,phase){ const D2=o.data||{};
 async function loadOverrides(){ if(!WEB||!SB) return; try{ const {data,error}=await SB.from('overrides').select('id,kind,data,created_at').order('id'); if(error) throw error; OVR=data||[];
     OVR.forEach(o=>applyOvr(o,'early')); const sel=document.getElementById('ctask'); if(sel) sel.innerHTML=''; i18nAll();
     if(WREADY&&!OVRW){ OVR.forEach(o=>applyOvr(o,'wiki')); OVRW=true; } renderAll(); }catch(e){ console.warn('overrides',e); } }
-const BETA=/\/beta\//.test(location.pathname);
+const BETA=true;
 const GL=(de,en)=>LANG==='de'?de:en;
 const GN=x=>LANG==='de'?i18nName(x):x;
 const GEMO={'Catch fish':'🎣','Market orders':'🛒','Send planes':'✈️','Fill plane crates':'📦','Send ships':'🚢','Fill ship crates':'📦','Complete floating market':'⛵'};
 const GICO={'Catch fish':'fishingRod','Market orders':'marketPlace','Send planes':'plane','Fill plane crates':'planeCrate','Send ships':'ship','Fill ship crates':'shipCrate','Complete floating market':'floatingMarket'};
 function gIcon(it){ const k=GICO[it]&&WI['Icon-resource-'+GICO[it]]; if(k) return `<img src="${k}" alt="">`; return GEMO[it]?`<span style="font-size:28px">${GEMO[it]}</span>`:icon(it); }
-let GD=null; try{ GD=JSON.parse(localStorage.getItem('sic-guild-beta')||'null'); }catch(_){}
-let gEdit=false;
-if(GD&&GD.name==='Legendary Lions'){ GD.name='Lili’s Beauty Farm'; try{ localStorage.setItem('sic-guild-beta',JSON.stringify(GD)); }catch(_){} }
 const CT0=Date.UTC(2026,10,16);
 function ctInfo(now){ now=now||Date.now(); const D=864e5; let k=Math.floor((now-CT0)/(21*D)); let s=CT0+k*21*D; const live=now<s+7*D; if(!live) s+=21*D; return {s:new Date(s),e:new Date(s+7*D),live}; }
 function ctFmt(d){ return LANG==='de'?d.getUTCDate()+'.'+(d.getUTCMonth()+1)+'.':d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}); }
 function ctTitle(){ const c=ctInfo(); return GL('Kreuzfahrt-Turnier ','Cruise tournament ')+ctFmt(c.s)+'–'+ctFmt(c.e); }
-function ctLine(){ const c=ctInfo(); const d=Math.max(0,Math.ceil((c.live?c.e:c.s)-Date.now())/864e5|0);
+function ctLine(){ const c=ctInfo();
   return c.live?GL(`🛳️ Kreuzfahrt-Turnier läuft (${ctFmt(c.s)}–${ctFmt(c.e)})`,`🛳️ Cruise tournament running (${ctFmt(c.s)}–${ctFmt(c.e)})`)
     :GL(`📅 Nächstes Kreuzfahrt-Turnier: ${ctFmt(c.s)}–${ctFmt(c.e)}`,`📅 Next cruise tournament: ${ctFmt(c.s)}–${ctFmt(c.e)}`); }
-function gSave(){ try{ localStorage.setItem('sic-guild-beta',JSON.stringify(GD)); }catch(_){} }
-function gLead(){ return GD&&(GD.role==='lead'||GD.role==='co'); }
-function gTime(t){ const T=CRUISE.find(x=>x[0]===t.isl&&x[1]===t.item); if(!T||T[0]==='Other') return '–'; const rs=cRecipes(t.item); if(!rs.length) return '–';
-  const r=rs.find(x=>/Regular/.test(x.p))||rs[0]; if(!myGroups(r.b).length) return GL('Gebäude unter «Mein Spiel» eintragen','Add your buildings under “My game”');
-  const c=cCalc(t.item,r,+t.q||0,0,24); return c.rounds===Infinity?'–':GL('ca. ','approx. ')+fmtT(c.time); }
-function gTaskHtml(t,i){ const me=GD.me; const mine=t.who.includes(me);
-  const names=t.who.length?t.who.map(n=>`<span class="gname${n===me?' me':''}">${esc(n)}${gLead()?`<button data-gx="${i}" data-gn="${esc(n)}" aria-label="remove">×</button>`:''}</span>`).join(''):`<span class="gmeta">${GL('Noch niemand','Nobody yet')}</span>`;
+/* ---- state ---- G = what is shown; demo lives in this browser, live comes from the database */
+let G=null, GDEMO=false, gEdit=false, gBusy=false, gErr='', GLIST=null, GCUR=null, gNew=false;
+try{ localStorage.removeItem('sic-guild-beta'); }catch(_){}
+function gPending(){ try{ return localStorage.getItem('sic-gjoin')||''; }catch(_){ return ''; } }
+function gSetPending(c){ try{ c?localStorage.setItem('sic-gjoin',c):localStorage.removeItem('sic-gjoin'); }catch(_){} }
+function gLead(){ return G&&(G.role==='lead'||G.role==='co'); }
+function gDemoSave(){ try{ localStorage.setItem('sic-guild-demo',JSON.stringify(G)); }catch(_){} }
+function gDemo(){ const T=(isl,item,tier,who)=>{ const x=CRUISE.find(c=>c[0]===isl&&c[1]===item); const r=x&&x[3][tier-1]; return {id:'d'+Math.random().toString(36).slice(2),isl,item,tier,q:r?String(r[0]):'',p:r?String(r[1]):'',h:r&&r[2]?String(r[2]):'',hrs:x?x[2]:0,who:(who||[]).map(n=>({u:n,n}))}; };
+  return {demo:true,name:'Lili’s Beauty Farm',me:'SunnyPlayer',myId:'SunnyPlayer',role:'mem',rules:GL('1. Nimm nur Aufgaben an, die du sicher schaffst.\n2. Trag dich hier ein, bevor du startest.\n3. Fertig bis Sonntag 20 Uhr.','1. Only take tasks you can finish.\n2. Sign up here before you start.\n3. Done by Sunday 8 pm.'),
+    ev:{id:'e1',title:ctTitle(),tasks:[T('Haven','Quilt',6,['Lina','KoalaKing']),T('Jade','Embroidered tunic',5),T('Tropicalis','Hammock',2,['KoalaKing']),T('Other','Complete floating market',1)]},
+    arch:[{title:GL('Kreuzfahrt-Turnier 26.10.–2.11.','Cruise tournament 26 Oct–2 Nov'),tasks:[T('Tropicalis','Poncho',6,['Lina'])]}]}; }
+/* ---- database ---- */
+async function gq(p){ const r=await p; if(r.error) throw r.error; return r.data; }
+async function gLoadList(){ GLIST=await gq(SB.from('guild_members').select('guild_id,role,ign,guilds(name)').eq('user_id',SBUSER.id));
+  if(!GLIST.find(x=>x.guild_id===GCUR)){ let last=''; try{ last=localStorage.getItem('sic-gcur')||''; }catch(_){} GCUR=(GLIST.find(x=>x.guild_id===last)||GLIST[0]||{}).guild_id||null; } }
+async function gLoad(){ if(!GCUR){ G=null; return; } const gid=GCUR; try{ localStorage.setItem('sic-gcur',gid); }catch(_){}
+  const [g,mem,evs,tasks,sus]=await Promise.all([gq(SB.from('guilds').select('name,rules').eq('id',gid).single()),gq(SB.from('guild_members').select('user_id,ign,role').eq('guild_id',gid)),
+    gq(SB.from('guild_events').select('id,title,archived,created_at').eq('guild_id',gid).order('created_at',{ascending:false})),gq(SB.from('guild_tasks').select('*').eq('guild_id',gid).order('created_at')),gq(SB.from('guild_signups').select('task_id,user_id,created_at').eq('guild_id',gid).order('created_at'))]);
+  const nm={}; mem.forEach(m=>nm[m.user_id]=m.ign); const me=mem.find(m=>m.user_id===SBUSER.id)||{};
+  const mk=t=>({id:t.id,isl:t.isl,item:t.item,tier:t.tier,q:t.q,p:t.p,h:t.h,hrs:+t.hrs,who:sus.filter(s=>s.task_id===t.id).map(s=>({u:s.user_id,n:nm[s.user_id]||'?'}))});
+  let cur=evs.find(e=>!e.archived);
+  if(!cur&&(me.role==='lead'||me.role==='co')){ cur=(await gq(SB.from('guild_events').insert({guild_id:gid,title:ctTitle()}).select().single())); }
+  let codes=null; if(me.role==='lead'){ const r=await SB.from('guild_codes').select('member_code,co_code').eq('guild_id',gid).maybeSingle(); codes=r.data||null; }
+  G={demo:false,id:gid,name:g.name,rules:g.rules,me:me.ign,myId:SBUSER.id,role:me.role,codes,members:mem.length,
+    ev:cur?{id:cur.id,title:cur.title,tasks:tasks.filter(t=>t.event_id===cur.id).map(mk)}:null,
+    arch:evs.filter(e=>e.archived).map(e=>({title:e.title,tasks:tasks.filter(t=>t.event_id===e.id).map(mk)}))}; }
+async function gRefresh(){ if(GDEMO){ renderGilde(); return; } if(!SB||!SBUSER){ renderGilde(); return; } gBusy=true; renderGilde();
+  try{ await gLoadList(); await gLoad(); gErr=''; }catch(e){ console.warn(e); gErr=GL('Gilde konnte nicht geladen werden. Bitte später nochmals versuchen.','Could not load the guild. Please try again later.'); }
+  gBusy=false; renderGilde(); }
+/* ---- rendering ---- */
+function gTaskHtml(t,i){ const mine=t.who.some(w=>w.u===G.myId);
+  const names=t.who.length?t.who.map(w=>`<span class="gname${w.u===G.myId?' me':''}">${esc(w.n)}${gLead()?`<button data-gx="${i}" data-gu="${esc(w.u)}" aria-label="remove">×</button>`:''}</span>`).join(''):`<span class="gmeta">${GL('Noch niemand','Nobody yet')}</span>`;
   return `<div class="grow"><div class="gic">${gIcon(t.item)}</div><div style="flex:1;min-width:0"><div class="gti">${esc(GN(t.item))} <span class="gq">x${esc(String(t.q||'?'))}</span></div><div class="gchips"><span class="chip">Tier ${t.tier}</span><span class="chip">🎀 ${esc(String(t.p||'?'))}</span>${t.h?`<span class="chip">💜 ${esc(String(t.h))}</span>`:''}<span class="chip">⏱ ${t.hrs} h</span></div>
   <div>${names}</div></div>
   <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><button class="pill${mine?' on':''}" data-gme="${i}">${mine?GL('Ich ✓','Me ✓'):GL('Ich mache das','I’ll do it')}</button>${gLead()?`<button class="pill" data-gdel="${i}" aria-label="delete">🗑</button>`:''}</div></div>`; }
-function gAddForm(){ const G={}; CRUISE.forEach((t,i)=>{ (G[t[0]]=G[t[0]]||[]).push(`<option value="${i}">${esc(GN(t[1]))}</option>`); });
+function gAddForm(){ const O={}; CRUISE.forEach((t,i)=>{ (O[t[0]]=O[t[0]]||[]).push(`<option value="${i}">${esc(GN(t[1]))}</option>`); });
   const isl={Haven:'Haven',Tropicalis:'Tropicalis',Jade:'Jade',Other:GL('Andere','Other')};
   return `<div class="card"><h3>${GL('Aufgabe hinzufügen','Add task')}</h3><div class="gform">
-  <label>${GL('Aufgabe','Task')}<select class="inp" id="gat">${Object.keys(G).map(k=>`<optgroup label="${isl[k]||k}">${G[k].join('')}</optgroup>`).join('')}</select></label>
+  <label>${GL('Aufgabe','Task')}<select class="inp" id="gat">${Object.keys(O).map(k=>`<optgroup label="${isl[k]||k}">${O[k].join('')}</optgroup>`).join('')}</select></label>
   <label>Tier<select class="inp" id="gtr">${[1,2,3,4,5,6].map(n=>`<option value="${n}">Tier ${n}</option>`).join('')}</select></label>
   <label>${GL('Menge','Amount')}<input class="inp" id="gq" inputmode="numeric"></label>
   <label>${GL('Punkte','Points')}<input class="inp" id="gp" inputmode="numeric"></label>
   <label>${GL('Herzen','Hearts')}<input class="inp" id="gh" inputmode="numeric"></label>
   <button class="btn" id="gadd">${GL('Hinzufügen','Add')}</button></div>
   <div class="gmeta" id="ghint" style="margin-top:6px"></div></div>`; }
-function gFill(){ const T=CRUISE[+document.getElementById('gat').value]; const n=+document.getElementById('gtr').value; const x=T[3][n-1];
+function gFill(){ const a=document.getElementById('gat'); if(!a) return; const T=CRUISE[+a.value]; const n=+document.getElementById('gtr').value; const x=T[3][n-1];
   document.getElementById('gq').value=x&&x[0]!=null?x[0]:''; document.getElementById('gp').value=x&&x[1]&&x[1]!=='?'?x[1]:''; document.getElementById('gh').value=x&&x[2]?x[2]:'';
   document.getElementById('ghint').textContent=x&&x[0]!=null&&x[1]&&x[1]!=='?'?GL('Aus unseren Daten übernommen – du kannst die Zahlen anpassen.','Filled from our data – you can adjust the numbers.'):GL('Diese Stufe fehlt in unseren Daten – bitte Zahlen aus dem Spiel eintragen.','This tier is missing in our data – please enter the numbers from the game.'); }
+function gCreateCard(){ return `<div class="card"><h3>${GL('Gilde eröffnen','Create a guild')}</h3><p class="gmeta" style="margin:0 0 10px">${GL('Als Leiter erfasst du Aufgaben und Regeln für die Kreuzfahrt. Deine Mitglieder treten über einen Link bei. Sichtbar ist nur der Ingame-Name.','As leader you add cruise tasks and rules. Your members join through a link. Only in-game names are visible.')}</p>
+  <div class="gform"><label>${GL('Name der Gilde','Guild name')}<input class="inp" id="ggn" maxlength="40"></label><label>${GL('Dein Ingame-Name','Your in-game name')}<input class="inp" id="gme" maxlength="30"></label><button class="btn" id="gnew">${GL('Eröffnen','Create')}</button></div></div>`; }
 function renderGilde(){ const el=document.getElementById('gilde'); if(!el) return;
   const credit=`<div class="gmeta" style="text-align:center;margin-top:4px">💛 ${GL('Inspiriert von LL Lina','Inspired by LL Lina')}</div>`;
-  const beta=`<div class="gbeta">🧪 ${GL('Beta-Vorschau: Alles bleibt nur in diesem Browser gespeichert. In der fertigen Version sehen es alle Mitglieder deiner Gilde über den Einladungslink.','Beta preview: everything is stored in this browser only. In the final version, all members of your guild see it through the invite link.')}</div>`;
-  if(!GD){ el.innerHTML=`<div class="gd">${beta}<div class="card"><h3>${GL('Gilde eröffnen','Create a guild')}</h3><p class="gmeta" style="margin:0 0 10px">${GL('Als Leiter erfasst du Aufgaben und Regeln für die Kreuzfahrt. Deine Mitglieder tragen sich über einen Link ein. Sichtbar ist nur der Ingame-Name.','As leader you add cruise tasks and rules. Your members sign up through a link. Only in-game names are visible.')}</p>
-    <div class="gform"><label>${GL('Name der Gilde','Guild name')}<input class="inp" id="ggn" maxlength="40"></label><label>${GL('Dein Ingame-Name','Your in-game name')}<input class="inp" id="gme" maxlength="30"></label><button class="btn" id="gnew">${GL('Eröffnen','Create')}</button></div><div class="gmeta" id="gerr" style="color:var(--bad,#c33)"></div></div>
-    <div class="card"><h3>${GL('Beispiel ansehen','Try an example')}</h3><button class="pill" id="gdemo">${GL('Beispiel-Gilde laden','Load example guild')}</button></div>${credit}</div>`; return; }
-  const E=GD.ev; const roles={lead:GL('Leiter','Leader'),co:GL('Co-Leiter','Co-leader'),mem:GL('Mitglied','Member')};
-  el.innerHTML=`<div class="gd">${beta}
-  <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h3 style="margin:0">🛳️ ${esc(GD.name)}</h3>
-    <div class="grole"><span class="gmeta">${GL('Vorschau als','Preview as')}:</span>${['lead','co','mem'].map(r=>`<button class="pill${GD.role===r?' on':''}" data-grole="${r}">${roles[r]}</button>`).join('')}</div></div>
-    <div class="gmeta" style="margin-top:6px">${GL('Du bist','You are')} <b>${esc(GD.me)}</b> · <button class="pill" id="gren">${GL('Ingame-Namen ändern','Change in-game name')}</button></div>
-    ${GD.role==='lead'?`<div class="gmeta" style="margin-top:8px">${GL('Einladungslinks','Invite links')}: <button class="pill" data-glink="m">🔗 ${GL('Mitglieder','Members')}</button> <button class="pill" data-glink="c">🔗 ${GL('Co-Leiter','Co-leaders')}</button></div>`:''}</div>
+  const err=gErr?`<div class="gbeta" style="border-color:#c33">${esc(gErr)}</div>`:'';
+  const demoBtn=`<div class="card"><h3>${GL('Beispiel ansehen','Try an example')}</h3><p class="gmeta" style="margin:0 0 8px">${GL('Probiere die Gilde mit Beispieldaten aus. Das Beispiel bleibt nur in diesem Browser.','Try the guild with example data. The example stays in this browser only.')}</p><button class="pill" id="gdemo">${GL('Beispiel-Gilde laden','Load example guild')}</button></div>`;
+  if(GDEMO&&G) return void (el.innerHTML=gMain(err,credit));
+  if(!WEB){ el.innerHTML=`<div class="gd">${err}<div class="gbeta">${GL('Gilden gibt es auf sunshineisland-tools.com.','Guilds are available on sunshineisland-tools.com.')}</div>${demoBtn}${credit}</div>`; return; }
+  const code=gPending();
+  if(!SBUSER){ el.innerHTML=`<div class="gd">${err}<div class="card"><h3>🛡️ ${code?GL('Du wurdest in eine Gilde eingeladen','You were invited to a guild'):GL('Gilde','Guild')}</h3><p class="gmeta" style="margin:0 0 10px">${GL('Melde dich mit Google an, um eine Gilde zu eröffnen oder beizutreten. Andere sehen nur deinen Ingame-Namen, nie deinen Google-Namen oder deine E-Mail-Adresse.','Sign in with Google to create or join a guild. Others only see your in-game name, never your Google name or email address.')}</p><button class="btn" id="signin">${GL('Mit Google anmelden','Sign in with Google')}</button></div>${demoBtn}${credit}</div>`; return; }
+  if(gBusy&&!G&&!GLIST){ el.innerHTML=`<div class="gd"><div class="card gmeta">${GL('Lade Gilde …','Loading guild …')}</div></div>`; return; }
+  if(code){ el.innerHTML=`<div class="gd">${err}<div class="card"><h3>🛡️ ${GL('Gilde beitreten','Join guild')}</h3><p class="gmeta" style="margin:0 0 10px">${GL('Gib deinen Ingame-Namen ein. Nur dieser ist für die anderen Mitglieder sichtbar.','Enter your in-game name. Only this is visible to the other members.')}</p>
+    <div class="gform"><label>${GL('Dein Ingame-Name','Your in-game name')}<input class="inp" id="gjn" maxlength="30"></label><button class="btn" id="gjoin">${GL('Beitreten','Join')}</button><button class="pill" id="gjno">${GL('Abbrechen','Cancel')}</button></div></div>${credit}</div>`; return; }
+  if(!GLIST||!GLIST.length||gNew){ el.innerHTML=`<div class="gd">${err}${gCreateCard()}${gNew?`<button class="pill" id="gnewx">${GL('Zurück','Back')}</button>`:demoBtn}${credit}</div>`; return; }
+  if(!G){ el.innerHTML=`<div class="gd">${err}<div class="card gmeta">${GL('Lade Gilde …','Loading guild …')}</div></div>`; return; }
+  el.innerHTML=gMain(err,credit); }
+function gMain(err,credit){ const E=G.ev; const roles={lead:GL('Leiter','Leader'),co:GL('Co-Leiter','Co-leader'),mem:GL('Mitglied','Member')};
+  const top=G.demo?`<div class="gbeta">🧪 ${GL('Beispiel-Gilde: nur in diesem Browser. Oben kannst du die Rolle wechseln.','Example guild: this browser only. Switch the role above to try it.')} <button class="pill" id="gdemox">${GL('Beispiel schliessen','Close example')}</button></div>`:'';
+  const sel=!G.demo&&GLIST&&GLIST.length>1?`<select class="inp" id="gsel" style="width:auto">${GLIST.map(x=>`<option value="${x.guild_id}"${x.guild_id===GCUR?' selected':''}>${esc(x.guilds?x.guilds.name:'?')}</option>`).join('')}</select>`:'';
+  const link=k=>location.origin+location.pathname+'#gilde-'+(k==='m'?'join':'co')+'-'+(G.codes?(k==='m'?G.codes.member_code:G.codes.co_code):'DEMO');
+  return `<div class="gd">${err}${top}
+  <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h3 style="margin:0">🛳️ ${esc(G.name)}</h3>${sel}
+    ${G.demo?`<div class="grole"><span class="gmeta">${GL('Vorschau als','Preview as')}:</span>${['lead','co','mem'].map(r=>`<button class="pill${G.role===r?' on':''}" data-grole="${r}">${roles[r]}</button>`).join('')}</div>`:`<span class="pill">${roles[G.role]||''}</span>`}</div>
+    <div class="gmeta" style="margin-top:6px">${GL('Du bist','You are')} <b>${esc(G.me||'')}</b> · <button class="pill" id="gren">${GL('Ingame-Namen ändern','Change in-game name')}</button>${G.demo?'':` · ${G.members} ${GL('Mitglieder','members')} · <button class="pill" id="grefresh">↻ ${GL('Aktualisieren','Refresh')}</button>`}</div>
+    ${G.role==='lead'?`<div class="gmeta" style="margin-top:8px">${GL('Einladungslinks','Invite links')}: <button class="pill" data-glink="m" data-url="${esc(link('m'))}">🔗 ${GL('Mitglieder','Members')}</button> <button class="pill" data-glink="c" data-url="${esc(link('c'))}">🔗 ${GL('Co-Leiter','Co-leaders')}</button>${G.demo?'':` <button class="pill" id="gcodes">${GL('Neue Links erstellen','New links')}</button>`}</div><div class="gmeta">${GL('Den Co-Leiter-Link nur an Co-Leiter geben.','Only give the co-leader link to co-leaders.')}</div>`:''}</div>
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>📜 ${GL('Regeln','Rules')}</h3>${gLead()&&!gEdit?`<button class="pill" id="gre">${GL('Bearbeiten','Edit')}</button>`:''}</div>
-    ${gEdit?`<textarea class="inp" id="grt" rows="5" style="width:100%">${esc(GD.rules||'')}</textarea><div style="margin-top:8px"><button class="btn" id="grs">${GL('Speichern','Save')}</button></div>`:`<div class="grules">${GD.rules?esc(GD.rules):`<span class="gmeta">${GL('Noch keine Regeln erfasst.','No rules yet.')}</span>`}</div>`}</div>
-  <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">${esc(E.title)}</h3>${gLead()?`<button class="pill" id="garc">📦 ${GL('Turnier abschliessen','Finish tournament')}</button>`:''}</div>
+    ${gEdit?`<textarea class="inp" id="grt" rows="5" style="width:100%">${esc(G.rules||'')}</textarea><div style="margin-top:8px"><button class="btn" id="grs">${GL('Speichern','Save')}</button></div>`:`<div class="grules">${G.rules?esc(G.rules):`<span class="gmeta">${GL('Noch keine Regeln erfasst.','No rules yet.')}</span>`}</div>`}</div>
+  ${E?`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">${esc(E.title)}</h3>${gLead()?`<button class="pill" id="garc">📦 ${GL('Turnier abschliessen','Finish tournament')}</button>`:''}</div>
     <div class="gmeta" style="margin:4px 0 2px">${ctLine()}</div>
     <div class="gmeta" style="margin:4px 0 6px">${E.tasks.length} ${GL('Aufgaben','tasks')} · ${E.tasks.filter(t=>!t.who.length).length} ${GL('ohne Spieler','without players')}</div>
-    ${E.tasks.length?E.tasks.map(gTaskHtml).join(''):`<div class="gmeta">${GL('Noch keine Aufgaben.','No tasks yet.')}</div>`}</div>
-  ${gLead()?gAddForm():''}
-  <div class="card"><h3>🗂️ ${GL('Archiv','Archive')}</h3>${GD.arch.length?GD.arch.map(a=>`<details style="margin-top:6px"><summary>${esc(a.title)} · ${a.tasks.length} ${GL('Aufgaben','tasks')}</summary>${a.tasks.map(t=>`<div class="gmeta" style="padding:3px 0">${esc(GN(t.item))} x${esc(String(t.q))} (T${t.tier}) – ${t.who.length?esc(t.who.join(', ')):GL('niemand','nobody')}</div>`).join('')}</details>`).join(''):`<span class="gmeta">${GL('Abgeschlossene Turniere erscheinen hier.','Finished tournaments appear here.')}</span>`}
-    ${gLead()?`<div style="margin-top:12px"><button class="pill" id="greset">${GL('Beta-Gilde löschen','Delete beta guild')}</button></div>`:''}</div>${credit}</div>`;
-  if(gLead()) gFill(); }
-function gTask(isl,item,tier){ const T=CRUISE.find(x=>x[0]===isl&&x[1]===item); const x=T&&T[3][tier-1]; return {isl,item,tier,q:x?x[0]:'',p:x?x[1]:'',h:x&&x[2]||'',hrs:T?T[2]:0,who:[]}; }
-document.addEventListener('change',e=>{ if(e.target.id==='gat'||e.target.id==='gtr') gFill(); });
-document.addEventListener('click',e=>{ if(!e.target.closest('#gilde')) return; const b=e.target.closest('button'); if(!b) return;
-  if(b.id==='gnew'){ const n=document.getElementById('ggn').value.trim(), m=document.getElementById('gme').value.trim(); if(!n||!m){ document.getElementById('gerr').textContent=GL('Bitte Gildenname und Ingame-Namen eingeben.','Enter a guild name and your in-game name.'); return; }
-    GD={name:n,me:m,role:'lead',rules:'',ev:{title:ctTitle(),tasks:[]},arch:[]}; }
-  else if(b.id==='gdemo'){ const a=gTask('Haven','Quilt',6), c=gTask('Jade','Embroidered tunic',5), d=gTask('Tropicalis','Hammock',2), f=gTask('Other','Complete floating market',1);
-    a.who=['Lina','KoalaKing']; d.who=['KoalaKing','Lina'];
-    GD={name:'Lili’s Beauty Farm',me:'SunnyPlayer',role:'mem',rules:GL('1. Nimm nur Aufgaben an, die du sicher schaffst.\n2. Trag dich hier ein, bevor du startest.\n3. Fertig bis Samstag 20 Uhr.','1. Only take tasks you can finish.\n2. Sign up here before you start.\n3. Done by Saturday 8 pm.'),ev:{title:ctTitle(),tasks:[a,c,d,f]},arch:[{title:GL('Kreuzfahrt-Turnier 26.10.–2.11.','Cruise tournament 26 Oct–2 Nov'),tasks:[Object.assign(gTask('Tropicalis','Poncho',6),{who:['KoalaKing']})]}]}; }
-  else if(b.dataset.grole){ GD.role=b.dataset.grole; gEdit=false; }
-  else if(b.id==='gren'){ const n=prompt(GL('Dein Ingame-Name:','Your in-game name:'),GD.me); if(!n||!n.trim()) return; const o=GD.me; GD.me=n.trim().slice(0,30); GD.ev.tasks.forEach(t=>t.who=t.who.map(x=>x===o?GD.me:x)); }
-  else if(b.dataset.glink){ const u=location.origin+location.pathname+'#gilde-'+(b.dataset.glink==='m'?'join':'co')+'-DEMO'; try{ navigator.clipboard.writeText(u); }catch(_){} b.textContent='✓ '+GL('Kopiert (Beispiel)','Copied (example)'); return; }
-  else if(b.id==='gre'){ gEdit=true; }
-  else if(b.id==='grs'){ GD.rules=document.getElementById('grt').value.slice(0,2000); gEdit=false; }
-  else if(b.dataset.gme!=null){ const t=GD.ev.tasks[+b.dataset.gme]; const k=t.who.indexOf(GD.me); k<0?t.who.push(GD.me):t.who.splice(k,1); }
-  else if(b.dataset.gdel!=null){ if(!confirm(GL('Aufgabe löschen?','Delete task?'))) return; GD.ev.tasks.splice(+b.dataset.gdel,1); }
-  else if(b.dataset.gx!=null){ const t=GD.ev.tasks[+b.dataset.gx]; t.who=t.who.filter(x=>x!==b.dataset.gn); }
-  else if(b.id==='gadd'){ const T=CRUISE[+document.getElementById('gat').value]; const t=gTask(T[0],T[1],+document.getElementById('gtr').value);
-    t.q=document.getElementById('gq').value.trim(); t.p=document.getElementById('gp').value.trim(); t.h=document.getElementById('gh').value.trim();
-    if(!t.q||!t.p){ document.getElementById('ghint').textContent=GL('Menge und Punkte werden benötigt.','Amount and points are required.'); return; } GD.ev.tasks.push(t); }
-  else if(b.id==='garc'){ const n=prompt(GL('Name des nächsten Turniers:','Name of the next tournament:'),ctTitle()); if(n===null) return; GD.arch.unshift(GD.ev); GD.ev={title:n.trim()||GL('Kreuzfahrt-Turnier','Cruise tournament'),tasks:[]}; }
-  else if(b.id==='greset'){ if(!confirm(GL('Beta-Gilde in diesem Browser löschen?','Delete the beta guild in this browser?'))) return; GD=null; }
-  else return;
-  gSave(); renderGilde(); });
+    ${E.tasks.length?E.tasks.map(gTaskHtml).join(''):`<div class="gmeta">${GL('Noch keine Aufgaben.','No tasks yet.')}</div>`}</div>`:`<div class="card gmeta">${GL('Gerade läuft kein Turnier in deiner Gilde.','No tournament in your guild right now.')}</div>`}
+  ${gLead()&&E?gAddForm():''}
+  <div class="card"><h3>🗂️ ${GL('Archiv','Archive')}</h3>${G.arch.length?G.arch.map(a=>`<details style="margin-top:6px"><summary>${esc(a.title)} · ${a.tasks.length} ${GL('Aufgaben','tasks')}</summary>${a.tasks.map(t=>`<div class="gmeta" style="padding:3px 0">${esc(GN(t.item))} x${esc(String(t.q))} (T${t.tier}) – ${t.who.length?esc(t.who.map(w=>w.n).join(', ')):GL('niemand','nobody')}</div>`).join('')}</details>`).join(''):`<span class="gmeta">${GL('Abgeschlossene Turniere erscheinen hier.','Finished tournaments appear here.')}</span>`}</div>
+  ${G.demo?'':`<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="pill" id="gnewg">＋ ${GL('Weitere Gilde eröffnen','Create another guild')}</button>${G.role==='lead'?`<button class="pill" id="gdelg">${GL('Gilde löschen','Delete guild')}</button>`:`<button class="pill" id="gleave">${GL('Gilde verlassen','Leave guild')}</button>`}</div>`}
+  ${credit}</div>`; }
+/* ---- actions ---- */
+document.addEventListener('change',e=>{ if(e.target.id==='gat'||e.target.id==='gtr') gFill(); if(e.target.id==='gsel'){ GCUR=e.target.value; G=null; gRefresh(); } });
+async function gAct(b){ const L=!G||G.demo; const T=i=>G.ev.tasks[+i];
+  if(b.id==='signin'){ return; }
+  if(b.id==='gdemo'){ try{ G=JSON.parse(localStorage.getItem('sic-guild-demo')||'null'); }catch(_){ G=null; } if(!G||!G.demo) G=gDemo(); GDEMO=true; gDemoSave(); return 'r'; }
+  if(b.id==='gdemox'){ GDEMO=false; G=null; try{ localStorage.removeItem('sic-guild-demo'); }catch(_){} return gRefresh(); }
+  if(b.id==='gjno'){ gSetPending(''); return 'r'; }
+  if(b.id==='gnewg'){ gNew=true; return 'r'; } if(b.id==='gnewx'){ gNew=false; return 'r'; }
+  if(b.id==='grefresh') return gRefresh();
+  if(b.id==='gnew'){ const n=document.getElementById('ggn').value.trim(), m=document.getElementById('gme').value.trim(); if(!n||!m){ gErr=GL('Bitte Gildenname und Ingame-Namen eingeben.','Enter a guild name and your in-game name.'); return 'r'; }
+    const gid=await gq(SB.rpc('create_guild',{gname:n,my_ign:m})); await gq(SB.from('guild_events').insert({guild_id:gid,title:ctTitle()})); GCUR=gid; gNew=false; G=null; return gRefresh(); }
+  if(b.id==='gjoin'){ const m=document.getElementById('gjn').value.trim(); if(!m){ gErr=GL('Bitte deinen Ingame-Namen eingeben.','Enter your in-game name.'); return 'r'; }
+    try{ GCUR=await gq(SB.rpc('join_guild',{code:gPending(),my_ign:m})); }catch(e){ gSetPending(''); gErr=GL('Dieser Einladungslink ist nicht mehr gültig. Frag deinen Gildenleiter nach einem neuen.','This invite link is no longer valid. Ask your guild leader for a new one.'); return 'r'; }
+    gSetPending(''); G=null; return gRefresh(); }
+  if(b.dataset.grole){ G.role=b.dataset.grole; gEdit=false; gDemoSave(); return 'r'; }
+  if(b.dataset.glink){ try{ await navigator.clipboard.writeText(b.dataset.url); b.textContent='✓ '+GL('Kopiert','Copied'); }catch(_){ prompt(GL('Link kopieren:','Copy link:'),b.dataset.url); } return; }
+  if(b.id==='gcodes'){ if(!confirm(GL('Neue Einladungslinks erstellen? Die alten Links funktionieren danach nicht mehr. Bisherige Mitglieder bleiben in der Gilde.','Create new invite links? The old links will stop working. Current members stay in the guild.'))) return; await gq(SB.rpc('new_guild_codes',{gid:G.id})); return gRefresh(); }
+  if(b.id==='gren'){ const n=prompt(GL('Dein Ingame-Name:','Your in-game name:'),G.me); if(!n||!n.trim()) return; const v=n.trim().slice(0,30);
+    if(L){ G.ev.tasks.forEach(t=>t.who.forEach(w=>{ if(w.u===G.myId) w.n=v; })); G.me=v; gDemoSave(); return 'r'; } await gq(SB.rpc('set_guild_ign',{gid:G.id,my_ign:v})); return gRefresh(); }
+  if(b.id==='gre'){ gEdit=true; return 'r'; }
+  if(b.id==='grs'){ const r=document.getElementById('grt').value.slice(0,2000); gEdit=false; if(L){ G.rules=r; gDemoSave(); return 'r'; } await gq(SB.from('guilds').update({rules:r}).eq('id',G.id)); return gRefresh(); }
+  if(b.dataset.gme!=null){ const t=T(b.dataset.gme); const mine=t.who.some(w=>w.u===G.myId);
+    if(L){ mine?t.who=t.who.filter(w=>w.u!==G.myId):t.who.push({u:G.myId,n:G.me}); gDemoSave(); return 'r'; }
+    if(mine) await gq(SB.from('guild_signups').delete().eq('task_id',t.id).eq('user_id',G.myId)); else await gq(SB.from('guild_signups').insert({task_id:t.id,guild_id:G.id,user_id:G.myId})); return gRefresh(); }
+  if(b.dataset.gdel!=null){ if(!confirm(GL('Aufgabe löschen?','Delete task?'))) return; const t=T(b.dataset.gdel); if(L){ G.ev.tasks=G.ev.tasks.filter(x=>x!==t); gDemoSave(); return 'r'; } await gq(SB.from('guild_tasks').delete().eq('id',t.id)); return gRefresh(); }
+  if(b.dataset.gx!=null){ const t=T(b.dataset.gx); const u=b.dataset.gu; if(L){ t.who=t.who.filter(w=>w.u!==u); gDemoSave(); return 'r'; } await gq(SB.from('guild_signups').delete().eq('task_id',t.id).eq('user_id',u)); return gRefresh(); }
+  if(b.id==='gadd'){ const C=CRUISE[+document.getElementById('gat').value]; const tier=+document.getElementById('gtr').value;
+    const t={isl:C[0],item:C[1],tier,q:document.getElementById('gq').value.trim(),p:document.getElementById('gp').value.trim(),h:document.getElementById('gh').value.trim(),hrs:C[2]};
+    if(!t.q||!t.p){ document.getElementById('ghint').textContent=GL('Menge und Punkte werden benötigt.','Amount and points are required.'); return; }
+    if(L){ G.ev.tasks.push(Object.assign({id:'d'+Date.now(),who:[]},t)); gDemoSave(); return 'r'; } await gq(SB.from('guild_tasks').insert(Object.assign({event_id:G.ev.id,guild_id:G.id},t))); return gRefresh(); }
+  if(b.id==='garc'){ const n=prompt(GL('Name des nächsten Turniers:','Name of the next tournament:'),ctTitle()); if(n===null) return; const title=(n.trim()||ctTitle()).slice(0,80);
+    if(L){ G.arch.unshift({title:G.ev.title,tasks:G.ev.tasks}); G.ev={id:'e'+Date.now(),title,tasks:[]}; gDemoSave(); return 'r'; }
+    await gq(SB.from('guild_events').update({archived:true}).eq('id',G.ev.id)); await gq(SB.from('guild_events').insert({guild_id:G.id,title})); return gRefresh(); }
+  if(b.id==='gleave'){ if(!confirm(GL('Gilde verlassen?','Leave the guild?'))) return; await gq(SB.from('guild_members').delete().eq('guild_id',G.id).eq('user_id',G.myId)); G=null; GCUR=null; return gRefresh(); }
+  if(b.id==='gdelg'){ if(prompt(GL('Zum Löschen den Gildennamen eingeben. Alle Aufgaben, Anmeldungen und das Archiv werden gelöscht.','Type the guild name to delete it. All tasks, sign-ups and the archive will be deleted.'))!==G.name) return; await gq(SB.from('guilds').delete().eq('id',G.id)); G=null; GCUR=null; return gRefresh(); }
+}
+document.addEventListener('click',async e=>{ if(!e.target.closest('#gilde')) return; const b=e.target.closest('button'); if(!b) return;
+  if(b.id==='signin'){ return; }
+  try{ gErr=''; const r=await gAct(b); if(r==='r') renderGilde(); }
+  catch(err){ console.warn(err); gErr=GL('Das hat nicht geklappt. Bitte nochmals versuchen.','That did not work. Please try again.')+(err&&err.message?' ('+err.message+')':''); renderGilde(); } });
+
 function cRecipes(item){ return D.rec.filter(r=>cn(r.o1)===cn(item)||(r.o2&&cn(r.o2)===cn(item))); }
 function cState(){ S.cruise=S.cruise||{}; const c=S.cruise; if(c.t==null) c.t=0; if(c.tier==null) c.tier=0; c.stock=c.stock||{}; c.rec=c.rec||{}; return c; }
 const fmtH = min => { if(min<=0) return 'instantly'; const h=Math.floor(min/60), m=Math.round(min%60); return ((h?h+' h ':'')+(m||!h?m+' min':'')).trim(); };
@@ -1735,8 +1788,8 @@ document.getElementById('subform').addEventListener('submit',async e=>{ e.preven
 const VIEWS=['gilde','planer','gebaeude','bibliothek','mein','rezepte','cruise','sim','ausbau','level','wiki','news','submit','check'];
 const GROUPS={me:['gebaeude','bibliothek','mein'],plan:['planer','cruise','sim'],look:['rezepte','ausbau','level','wiki','news'],help:['submit','check'],guild:['gilde']};
 const NEWS=[
- {d:'2026-11-19',de:['Kreuzfahrt: Tasse Kaffee Tier 2 und 3 mit Screenshots bestätigt und Herzen ergänzt (129 und 151).','Spielversion 1.3.40355: Das Update brachte nur Verbesserungen im Hintergrund, die Spielwerte sind unverändert.','Bibliothek: Kosten ergänzt für Schwimmender Markt Stifte I (Level 4), Reis I (Level 3) und Schiff Bücher II (Level 4).','Kreuzfahrt: Marimba Tier 6 (648 Punkte) und Jacke Tier 6 (x180, 270 Punkte) ergänzt; Steppdecke Tier 5 korrigiert (1’210 statt 1’037 Punkte).','Kreuzfahrt: 15 Aufgaben mit Screenshots bestätigt und Herzen ergänzt. Korrigiert: Eiskaffee x104 ist Tier 4 und x112 Tier 5, Katana x30 ist Tier 3 und x33 Tier 4.','Kreuzfahrt: Hängematte korrigiert – 1’296 Punkte ist Tier 1, 1’426 Punkte ist Tier 2 (nicht Tier 5).'],
-  en:['Cruise: Cup of coffee tier 2 and 3 confirmed with screenshots, hearts added (129 and 151).','Game version 1.3.40355: the update only brought background improvements, game values are unchanged.','Library: costs added for Floating Market pens I (level 4), rice I (level 3) and ship books II (level 4).','Cruise: marimba tier 6 (648 points) and jacket tier 6 (x180, 270 points) added; quilt tier 5 corrected (1,210 instead of 1,037 points).','Cruise: 15 tasks confirmed with screenshots and hearts added. Fixed: iced coffee x104 is tier 4 and x112 tier 5, katana x30 is tier 3 and x33 tier 4.','Cruise: hammock corrected – 1,296 points is tier 1, 1,426 points is tier 2 (not tier 5).']},
+ {d:'2026-11-19',de:['Neu: Gilde – Leiter und Co-Leiter erfassen die Aufgaben und Regeln für das Kreuzfahrt-Turnier, Mitglieder tragen sich per Einladungslink mit ihrem Ingame-Namen ein. Inspiriert von LL Lina.','Kreuzfahrt: Tasse Kaffee Tier 2 und 3 mit Screenshots bestätigt und Herzen ergänzt (129 und 151).','Spielversion 1.3.40355: Das Update brachte nur Verbesserungen im Hintergrund, die Spielwerte sind unverändert.','Bibliothek: Kosten ergänzt für Schwimmender Markt Stifte I (Level 4), Reis I (Level 3) und Schiff Bücher II (Level 4).','Kreuzfahrt: Marimba Tier 6 (648 Punkte) und Jacke Tier 6 (x180, 270 Punkte) ergänzt; Steppdecke Tier 5 korrigiert (1’210 statt 1’037 Punkte).','Kreuzfahrt: 15 Aufgaben mit Screenshots bestätigt und Herzen ergänzt. Korrigiert: Eiskaffee x104 ist Tier 4 und x112 Tier 5, Katana x30 ist Tier 3 und x33 Tier 4.','Kreuzfahrt: Hängematte korrigiert – 1’296 Punkte ist Tier 1, 1’426 Punkte ist Tier 2 (nicht Tier 5).'],
+  en:['New: Guild – leaders and co-leaders add the tasks and rules for the cruise tournament, members sign up through an invite link with their in-game name. Inspired by LL Lina.','Cruise: Cup of coffee tier 2 and 3 confirmed with screenshots, hearts added (129 and 151).','Game version 1.3.40355: the update only brought background improvements, game values are unchanged.','Library: costs added for Floating Market pens I (level 4), rice I (level 3) and ship books II (level 4).','Cruise: marimba tier 6 (648 points) and jacket tier 6 (x180, 270 points) added; quilt tier 5 corrected (1,210 instead of 1,037 points).','Cruise: 15 tasks confirmed with screenshots and hearts added. Fixed: iced coffee x104 is tier 4 and x112 tier 5, katana x30 is tier 3 and x33 tier 4.','Cruise: hammock corrected – 1,296 points is tier 1, 1,426 points is tier 2 (not tier 5).']},
  {d:'2026-11-18',de:['Haven-Dekos mit Screenshots geprüft: Blumenbeet, Brunnen, kleiner Brunnen, Teich, Baum, Bank, Wegweiser und Statue; auf Tropicalis tropisches Blumenbeet, Liegestuhl und Oldtimer.','Insel-Simulator: Speichere beliebig viele eigene Varianten pro Insel (z. B. «Aktuell», «Kreuzfahrt», «Ausbau-Plan») und wechsle jederzeit zwischen ihnen.','Fein- und Sofort-Varianten: Weizen, Gänseblümchen, Mais (Fein), Karotten (Sofort), Milch, Kiefernholz, Palmholz und Eisenerz mit Screenshots bis Max-Level geprüft – alles stimmt. Die übrigen Fein- und Sofort-Varianten folgen genau dem gleichen Muster und gelten damit ebenfalls als geprüft. Alle Produktionen sind jetzt geprüft.','Prüfliste: direkte Links zu einem Bereich, z. B. sunshineisland-tools.com/#check-lib für die fehlenden Bibliothekskosten.'],
   en:['Haven decorations checked with screenshots: flowerbed, fountain, small fountain, pond, tree, bench, sign post and statue; on Tropicalis the tropical flowerbed, sunbed and vintage car.','Island simulator: save as many named variants per island as you like (e.g. “Current”, “Cruise”, “Expansion plan”) and switch between them anytime.','Fine and Instant variants: wheat, daisy, corn (Fine), carrots (Instant), milk, pine wood, palm wood and iron ore checked with screenshots up to max level – everything is correct. The remaining Fine and Instant variants follow exactly the same pattern and are now marked as checked too. All productions are now verified.','Data check: direct links to one area, e.g. sunshineisland-tools.com/#check-lib for the missing library costs.']},
  {d:'2026-11-17',de:['Neue Navigation mit vier Bereichen: Mein Spiel, Planen, Nachschlagen und Mithelfen.','Münzkosten hängen jetzt von deiner Zufriedenheit ab – trag deine % unter Mein Spiel → Zufriedenheit ein.','Kreuzfahrt: Tier-Prüfer (✓ / ? / ⚠) und Tier-Finder; Punkte und Herzen werden getrennt angezeigt.','Neue Kreuzfahrt-Aufgaben: Hängematte, Steppdecke (Tier 6), Gong, Bambusreis und Vorhang.','Kleidermacher: Tunika braucht jetzt Seidenfaden; Münzkosten von Kleidermacher und Giesserei korrigiert.','Bibliothek: Kosten für Eisenbleche Level 5 ergänzt (danke an den Tester!).','Insel-Simulator: Inseln per Link teilen.','Neue Seite «Wie genau sind die Zahlen?», offizielle Kanäle von Sunshine Island und Datenschutz auf Deutsch.','Neue Prüfliste unter Mithelfen: zeigt, welche Daten geprüft sind und wo noch Screenshots fehlen.','Tropicalis: alle 15 Produktionen mit Screenshots geprüft – Zutaten, Zeiten, Mengen, XP und Münzkosten stimmen.','Haven: alle 19 Produktionen mit Screenshots geprüft. Korrigiert: Münzkosten Mais (150 statt 140) und Kuhfutter (30 statt 40).','Jade: alle 16 Produktionen mit Screenshots geprüft – alles stimmt. Damit sind alle Produktionen auf allen drei Inseln geprüft.','Spielerlevel: Freischaltung ergänzt für Bambusreis (46), Steppdecke (58), Vorhang (67), Gong (72) und Hängematte (90).','Dekos zeigen jetzt deutlich, zu welcher Insel sie gehören. Auch Event-Dekos gehören fest zu einer Insel.'],
@@ -1802,7 +1855,7 @@ function renderSetup(){ try{ newsDots(); }catch(_){}
     el.innerHTML=`<div class="stxt"><b>Set up “My game” first</b> <span>so the numbers match your game.</span> <span class="lbl">Still open:</span> ${miss.map(m=>`<span class="mtag">${m}</span>`).join(' ')}</div><button type="button" class="btn sm" data-go="${!st.b?'gebaeude':!st.l?'bibliothek':'mein'}">Set up</button>`; }
   else el.hidden=true;
   i18nAll(); }
-function show(v){ if(v==='gilde'&&!BETA) v='planer'; { const m=/^check-(prod|coin|lib|exp|cruise|upg|deco)$/.exec(v||''); if(m){ CKF.area=m[1]; CKF.st='todo'; v='check'; } } if(!VIEWS.includes(v)) v='planer';
+function show(v){ { const j=/^gilde-(join|co)-([a-f0-9]{6,})$/.exec(v||''); if(j){ gSetPending(j[2]); v='gilde'; try{ history.replaceState(null,'','#gilde'); }catch(_){} } } { const m=/^check-(prod|coin|lib|exp|cruise|upg|deco)$/.exec(v||''); if(m){ CKF.area=m[1]; CKF.st='todo'; v='check'; } } if(!VIEWS.includes(v)) v='planer';
   curGroup=groupOf(v); GLAST[curGroup]=v;
   document.querySelectorAll('.grp').forEach(g=>g.setAttribute('aria-pressed',String(g.dataset.g===curGroup)));
   document.querySelectorAll('.tab').forEach(t=>{ t.hidden=groupOf(t.dataset.v)!==curGroup||(t.id==='t-submit'&&!WEB); });
@@ -1834,7 +1887,7 @@ async function loadWiki(){
   }catch(e){ console.warn('wiki load failed',e); }
 }
 renderAll();
-show(location.hash.slice(1));
+{ let h=location.hash.slice(1); try{ if(!h&&(localStorage.getItem('sic-after-login')==='gilde'||localStorage.getItem('sic-gjoin'))) h='gilde'; localStorage.removeItem('sic-after-login'); }catch(_){} show(h); }
 (async()=>{ SHARE=await readShare(); if(SHARE){ applyShare(); } await initStore(); if(SHARE){ if(SIMBACK===null) applyShare(); renderShareBar(); const t=document.getElementById('t-sim'); if(t) t.click(); try{ renderSim(); }catch(e){} } })(); i18nAll();
 window.addEventListener('hashchange',()=>{ if(/#sim=/.test(location.hash)) location.reload(); });
 document.addEventListener('click',async e=>{
