@@ -1277,10 +1277,11 @@ function gFill(){ const T=CRUISE[+document.getElementById('gat').value]; const n
   document.getElementById('gq').value=x&&x[0]!=null?x[0]:''; document.getElementById('gp').value=x&&x[1]&&x[1]!=='?'?x[1]:''; document.getElementById('gh').value=x&&x[2]?x[2]:'';
   document.getElementById('ghint').textContent=x&&x[0]!=null&&x[1]&&x[1]!=='?'?GL('Aus unseren Daten übernommen – du kannst die Zahlen anpassen.','Filled from our data – you can adjust the numbers.'):GL('Diese Stufe fehlt in unseren Daten – bitte Zahlen aus dem Spiel eintragen.','This tier is missing in our data – please enter the numbers from the game.'); }
 function renderGilde(){ const el=document.getElementById('gilde'); if(!el) return;
+  const credit=`<div class="gmeta" style="text-align:center;margin-top:4px">💛 ${GL('Inspiriert von Linas Anmeldeliste für das Kreuzfahrt-Turnier – danke!','Inspired by Lina’s sign-up list for the cruise tournament – thank you!')}</div>`;
   const beta=`<div class="gbeta">🧪 ${GL('Beta-Vorschau: Alles bleibt nur in diesem Browser gespeichert. In der fertigen Version sehen es alle Mitglieder deiner Gilde über den Einladungslink.','Beta preview: everything is stored in this browser only. In the final version, all members of your guild see it through the invite link.')}</div>`;
   if(!GD){ el.innerHTML=`<div class="gd">${beta}<div class="card"><h3>${GL('Gilde eröffnen','Create a guild')}</h3><p class="gmeta" style="margin:0 0 10px">${GL('Als Leiter erfasst du Aufgaben und Regeln für die Kreuzfahrt. Deine Mitglieder tragen sich über einen Link ein. Sichtbar ist nur der Ingame-Name.','As leader you add cruise tasks and rules. Your members sign up through a link. Only in-game names are visible.')}</p>
     <div class="gform"><label>${GL('Name der Gilde','Guild name')}<input class="inp" id="ggn" maxlength="40"></label><label>${GL('Dein Ingame-Name','Your in-game name')}<input class="inp" id="gme" maxlength="30"></label><button class="btn" id="gnew">${GL('Eröffnen','Create')}</button></div><div class="gmeta" id="gerr" style="color:var(--bad,#c33)"></div></div>
-    <div class="card"><h3>${GL('Beispiel ansehen','Try an example')}</h3><button class="pill" id="gdemo">${GL('Beispiel-Gilde laden','Load example guild')}</button></div></div>`; return; }
+    <div class="card"><h3>${GL('Beispiel ansehen','Try an example')}</h3><button class="pill" id="gdemo">${GL('Beispiel-Gilde laden','Load example guild')}</button></div>${credit}</div>`; return; }
   const E=GD.ev; const roles={lead:GL('Leiter','Leader'),co:GL('Co-Leiter','Co-leader'),mem:GL('Mitglied','Member')};
   el.innerHTML=`<div class="gd">${beta}
   <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><h3 style="margin:0">🛳️ ${esc(GD.name)}</h3>
@@ -1295,7 +1296,7 @@ function renderGilde(){ const el=document.getElementById('gilde'); if(!el) retur
     ${E.tasks.length?E.tasks.map(gTaskHtml).join(''):`<div class="gmeta">${GL('Noch keine Aufgaben.','No tasks yet.')}</div>`}</div>
   ${gLead()?gAddForm():''}
   <div class="card"><h3>🗂️ ${GL('Archiv','Archive')}</h3>${GD.arch.length?GD.arch.map(a=>`<details style="margin-top:6px"><summary>${esc(a.title)} · ${a.tasks.length} ${GL('Aufgaben','tasks')}</summary>${a.tasks.map(t=>`<div class="gmeta" style="padding:3px 0">${esc(GN(t.item))} x${esc(String(t.q))} (T${t.tier}) – ${t.who.length?esc(t.who.join(', ')):GL('niemand','nobody')}</div>`).join('')}</details>`).join(''):`<span class="gmeta">${GL('Abgeschlossene Turniere erscheinen hier.','Finished tournaments appear here.')}</span>`}
-    ${gLead()?`<div style="margin-top:12px"><button class="pill" id="greset">${GL('Beta-Gilde löschen','Delete beta guild')}</button></div>`:''}</div></div>`;
+    ${gLead()?`<div style="margin-top:12px"><button class="pill" id="greset">${GL('Beta-Gilde löschen','Delete beta guild')}</button></div>`:''}</div>${credit}</div>`;
   if(gLead()) gFill(); }
 function gTask(isl,item,tier){ const T=CRUISE.find(x=>x[0]===isl&&x[1]===item); const x=T&&T[3][tier-1]; return {isl,item,tier,q:x?x[0]:'',p:x?x[1]:'',h:x&&x[2]||'',hrs:T?T[2]:0,who:[]}; }
 document.addEventListener('change',e=>{ if(e.target.id==='gat'||e.target.id==='gtr') gFill(); });
