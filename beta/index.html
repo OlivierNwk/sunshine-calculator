@@ -1250,7 +1250,7 @@ function gTime(t){ const T=CRUISE.find(x=>x[0]===t.isl&&x[1]===t.item); if(!T||T
 function gTaskHtml(t,i){ const me=GD.me; const mine=t.who.includes(me);
   const names=t.who.length?t.who.map(n=>`<span class="gname${n===me?' me':''}">${esc(n)}${gLead()?`<button data-gx="${i}" data-gn="${esc(n)}" aria-label="remove">×</button>`:''}</span>`).join(''):`<span class="gmeta">${GL('Noch niemand','Nobody yet')}</span>`;
   return `<div class="grow"><div class="gic">${gIcon(t.item)}</div><div style="flex:1;min-width:0"><div class="gti">${esc(GN(t.item))} <span class="gq">x${esc(String(t.q||'?'))}</span></div><div class="gchips"><span class="chip">Tier ${t.tier}</span><span class="chip">🎀 ${esc(String(t.p||'?'))}</span>${t.h?`<span class="chip">💜 ${esc(String(t.h))}</span>`:''}<span class="chip">⏱ ${t.hrs} h</span></div>
-  <div class="gmeta">${GL('Deine Produktionszeit','Your production time')}: ${esc(gTime(t))}</div><div>${names}</div></div>
+  <div>${names}</div></div>
   <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end"><button class="pill${mine?' on':''}" data-gme="${i}">${mine?GL('Ich ✓','Me ✓'):GL('Ich mache das','I’ll do it')}</button>${gLead()?`<button class="pill" data-gdel="${i}" aria-label="delete">🗑</button>`:''}</div></div>`; }
 function gAddForm(){ const G={}; CRUISE.forEach((t,i)=>{ (G[t[0]]=G[t[0]]||[]).push(`<option value="${i}">${esc(GN(t[1]))}</option>`); });
   const isl={Haven:'Haven',Tropicalis:'Tropicalis',Jade:'Jade',Other:GL('Andere','Other')};
