@@ -1239,7 +1239,8 @@ const BETA=/\/beta\//.test(location.pathname);
 const GL=(de,en)=>LANG==='de'?de:en;
 const GN=x=>LANG==='de'?i18nName(x):x;
 const GEMO={'Catch fish':'🎣','Market orders':'🛒','Send planes':'✈️','Fill plane crates':'📦','Send ships':'🚢','Fill ship crates':'📦','Complete floating market':'⛵'};
-function gIcon(it){ return GEMO[it]?`<span style="font-size:28px">${GEMO[it]}</span>`:icon(it); }
+const GICO={'Catch fish':'fishingRod','Market orders':'marketPlace','Send planes':'plane','Fill plane crates':'planeCrate','Send ships':'ship','Fill ship crates':'shipCrate','Complete floating market':'floatingMarket'};
+function gIcon(it){ const k=GICO[it]&&WI['Icon-resource-'+GICO[it]]; if(k) return `<img src="${k}" alt="">`; return GEMO[it]?`<span style="font-size:28px">${GEMO[it]}</span>`:icon(it); }
 let GD=null; try{ GD=JSON.parse(localStorage.getItem('sic-guild-beta')||'null'); }catch(_){}
 let gEdit=false;
 function gSave(){ try{ localStorage.setItem('sic-guild-beta',JSON.stringify(GD)); }catch(_){} }
