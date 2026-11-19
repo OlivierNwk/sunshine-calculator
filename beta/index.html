@@ -1244,6 +1244,7 @@ const GICO={'Catch fish':'fishingRod','Market orders':'marketPlace','Send planes
 function gIcon(it){ const k=GICO[it]&&WI['Icon-resource-'+GICO[it]]; if(k) return `<img src="${k}" alt="">`; return GEMO[it]?`<span style="font-size:28px">${GEMO[it]}</span>`:icon(it); }
 let GD=null; try{ GD=JSON.parse(localStorage.getItem('sic-guild-beta')||'null'); }catch(_){}
 let gEdit=false;
+if(GD&&GD.name==='Legendary Lions'){ GD.name='Lili’s Beauty Farm'; try{ localStorage.setItem('sic-guild-beta',JSON.stringify(GD)); }catch(_){} }
 const CT0=Date.UTC(2026,10,16);
 function ctInfo(now){ now=now||Date.now(); const D=864e5; let k=Math.floor((now-CT0)/(21*D)); let s=CT0+k*21*D; const live=now<s+7*D; if(!live) s+=21*D; return {s:new Date(s),e:new Date(s+7*D),live}; }
 function ctFmt(d){ return LANG==='de'?d.getUTCDate()+'.'+(d.getUTCMonth()+1)+'.':d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}); }
