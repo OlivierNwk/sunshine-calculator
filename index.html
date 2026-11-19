@@ -1242,6 +1242,13 @@ const GICO={'Catch fish':'fishingRod','Market orders':'marketPlace','Send planes
 function gIcon(it){ const k=GICO[it]&&WI['Icon-resource-'+GICO[it]]; if(k) return `<img src="${k}" alt="">`; return GEMO[it]?`<span style="font-size:28px">${GEMO[it]}</span>`:icon(it); }
 let GD=null; try{ GD=JSON.parse(localStorage.getItem('sic-guild-beta')||'null'); }catch(_){}
 let gEdit=false;
+const CT0=Date.UTC(2026,10,16);
+function ctInfo(now){ now=now||Date.now(); const D=864e5; let k=Math.floor((now-CT0)/(21*D)); let s=CT0+k*21*D; const live=now<s+7*D; if(!live) s+=21*D; return {s:new Date(s),e:new Date(s+7*D),live}; }
+function ctFmt(d){ return LANG==='de'?d.getUTCDate()+'.'+(d.getUTCMonth()+1)+'.':d.toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'UTC'}); }
+function ctTitle(){ const c=ctInfo(); return GL('Kreuzfahrt-Turnier ','Cruise tournament ')+ctFmt(c.s)+'–'+ctFmt(c.e); }
+function ctLine(){ const c=ctInfo(); const d=Math.max(0,Math.ceil((c.live?c.e:c.s)-Date.now())/864e5|0);
+  return c.live?GL(`🛳️ Kreuzfahrt-Turnier läuft (Montag ${ctFmt(c.s)} bis Montag ${ctFmt(c.e)} in der Nacht)`,`🛳️ Cruise tournament running (Monday ${ctFmt(c.s)} to Monday ${ctFmt(c.e)}, overnight)`)
+    :GL(`📅 Nächstes Kreuzfahrt-Turnier: Montag ${ctFmt(c.s)} bis Montag ${ctFmt(c.e)}. Dazwischen: Gilden- und Einzelturnier.`,`📅 Next cruise tournament: Monday ${ctFmt(c.s)} to Monday ${ctFmt(c.e)}. In between: guild and solo tournament.`); }
 function gSave(){ try{ localStorage.setItem('sic-guild-beta',JSON.stringify(GD)); }catch(_){} }
 function gLead(){ return GD&&(GD.role==='lead'||GD.role==='co'); }
 function gTime(t){ const T=CRUISE.find(x=>x[0]===t.isl&&x[1]===t.item); if(!T||T[0]==='Other') return '–'; const rs=cRecipes(t.item); if(!rs.length) return '–';
@@ -1279,6 +1286,7 @@ function renderGilde(){ const el=document.getElementById('gilde'); if(!el) retur
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>📜 ${GL('Regeln','Rules')}</h3>${gLead()&&!gEdit?`<button class="pill" id="gre">${GL('Bearbeiten','Edit')}</button>`:''}</div>
     ${gEdit?`<textarea class="inp" id="grt" rows="5" style="width:100%">${esc(GD.rules||'')}</textarea><div style="margin-top:8px"><button class="btn" id="grs">${GL('Speichern','Save')}</button></div>`:`<div class="grules">${GD.rules?esc(GD.rules):`<span class="gmeta">${GL('Noch keine Regeln erfasst.','No rules yet.')}</span>`}</div>`}</div>
   <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">${esc(E.title)}</h3>${gLead()?`<button class="pill" id="garc">📦 ${GL('Turnier abschliessen','Finish tournament')}</button>`:''}</div>
+    <div class="gmeta" style="margin:4px 0 2px">${ctLine()}</div>
     <div class="gmeta" style="margin:4px 0 6px">${E.tasks.length} ${GL('Aufgaben','tasks')} · ${E.tasks.filter(t=>!t.who.length).length} ${GL('ohne Spieler','without players')}</div>
     ${E.tasks.length?E.tasks.map(gTaskHtml).join(''):`<div class="gmeta">${GL('Noch keine Aufgaben.','No tasks yet.')}</div>`}</div>
   ${gLead()?gAddForm():''}
@@ -1289,10 +1297,10 @@ function gTask(isl,item,tier){ const T=CRUISE.find(x=>x[0]===isl&&x[1]===item); 
 document.addEventListener('change',e=>{ if(e.target.id==='gat'||e.target.id==='gtr') gFill(); });
 document.addEventListener('click',e=>{ if(!e.target.closest('#gilde')) return; const b=e.target.closest('button'); if(!b) return;
   if(b.id==='gnew'){ const n=document.getElementById('ggn').value.trim(), m=document.getElementById('gme').value.trim(); if(!n||!m){ document.getElementById('gerr').textContent=GL('Bitte Gildenname und Ingame-Namen eingeben.','Enter a guild name and your in-game name.'); return; }
-    GD={name:n,me:m,role:'lead',rules:'',ev:{title:GL('Kreuzfahrt-Turnier','Cruise tournament'),tasks:[]},arch:[]}; }
+    GD={name:n,me:m,role:'lead',rules:'',ev:{title:ctTitle(),tasks:[]},arch:[]}; }
   else if(b.id==='gdemo'){ const a=gTask('Haven','Quilt',6), c=gTask('Jade','Embroidered tunic',5), d=gTask('Tropicalis','Hammock',2), f=gTask('Other','Complete floating market',1);
     a.who=['Mila_88']; d.who=['KoalaKing','Mila_88'];
-    GD={name:'Legendary Lions',me:'SunnyPlayer',role:'mem',rules:GL('1. Nimm nur Aufgaben an, die du sicher schaffst.\n2. Trag dich hier ein, bevor du startest.\n3. Fertig bis Samstag 20 Uhr.','1. Only take tasks you can finish.\n2. Sign up here before you start.\n3. Done by Saturday 8 pm.'),ev:{title:GL('Kreuzfahrt-Turnier 17.–21.11.','Cruise tournament 17–21 Nov'),tasks:[a,c,d,f]},arch:[{title:GL('Kreuzfahrt-Turnier 10.–14.11.','Cruise tournament 10–14 Nov'),tasks:[Object.assign(gTask('Tropicalis','Poncho',6),{who:['KoalaKing']})]}]}; }
+    GD={name:'Legendary Lions',me:'SunnyPlayer',role:'mem',rules:GL('1. Nimm nur Aufgaben an, die du sicher schaffst.\n2. Trag dich hier ein, bevor du startest.\n3. Fertig bis Samstag 20 Uhr.','1. Only take tasks you can finish.\n2. Sign up here before you start.\n3. Done by Saturday 8 pm.'),ev:{title:ctTitle(),tasks:[a,c,d,f]},arch:[{title:GL('Kreuzfahrt-Turnier 26.10.–2.11.','Cruise tournament 26 Oct–2 Nov'),tasks:[Object.assign(gTask('Tropicalis','Poncho',6),{who:['KoalaKing']})]}]}; }
   else if(b.dataset.grole){ GD.role=b.dataset.grole; gEdit=false; }
   else if(b.id==='gren'){ const n=prompt(GL('Dein Ingame-Name:','Your in-game name:'),GD.me); if(!n||!n.trim()) return; const o=GD.me; GD.me=n.trim().slice(0,30); GD.ev.tasks.forEach(t=>t.who=t.who.map(x=>x===o?GD.me:x)); }
   else if(b.dataset.glink){ const u=location.origin+location.pathname+'#gilde-'+(b.dataset.glink==='m'?'join':'co')+'-DEMO'; try{ navigator.clipboard.writeText(u); }catch(_){} b.textContent='✓ '+GL('Kopiert (Beispiel)','Copied (example)'); return; }
@@ -1304,7 +1312,7 @@ document.addEventListener('click',e=>{ if(!e.target.closest('#gilde')) return; c
   else if(b.id==='gadd'){ const T=CRUISE[+document.getElementById('gat').value]; const t=gTask(T[0],T[1],+document.getElementById('gtr').value);
     t.q=document.getElementById('gq').value.trim(); t.p=document.getElementById('gp').value.trim(); t.h=document.getElementById('gh').value.trim();
     if(!t.q||!t.p){ document.getElementById('ghint').textContent=GL('Menge und Punkte werden benötigt.','Amount and points are required.'); return; } GD.ev.tasks.push(t); }
-  else if(b.id==='garc'){ const n=prompt(GL('Name des nächsten Turniers:','Name of the next tournament:'),GL('Kreuzfahrt-Turnier','Cruise tournament')); if(n===null) return; GD.arch.unshift(GD.ev); GD.ev={title:n.trim()||GL('Kreuzfahrt-Turnier','Cruise tournament'),tasks:[]}; }
+  else if(b.id==='garc'){ const n=prompt(GL('Name des nächsten Turniers:','Name of the next tournament:'),ctTitle()); if(n===null) return; GD.arch.unshift(GD.ev); GD.ev={title:n.trim()||GL('Kreuzfahrt-Turnier','Cruise tournament'),tasks:[]}; }
   else if(b.id==='greset'){ if(!confirm(GL('Beta-Gilde in diesem Browser löschen?','Delete the beta guild in this browser?'))) return; GD=null; }
   else return;
   gSave(); renderGilde(); });
