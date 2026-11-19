@@ -49,7 +49,9 @@ img{max-width:100%}
 .brand h1{font-size:20px;font-weight:800}
 .brand small{display:block;color:var(--muted);font-size:12px;font-weight:500;font-family:var(--body);letter-spacing:0}
 .groups{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--surface);padding:4px;border-radius:16px;border:1px solid var(--line);width:100%;max-width:640px}
+.groups.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
 .groups:has(#g-help[hidden]){grid-template-columns:repeat(3,minmax(0,1fr))}
+.groups.g5:has(#g-help[hidden]){grid-template-columns:repeat(4,minmax(0,1fr))}
 .grp{border:0;background:transparent;border-radius:12px;padding:8px 6px;font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;position:relative;font-size:14px}
 .grp .gi{font-size:17px}
 .grp[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
@@ -375,6 +377,7 @@ details.wb[open]>summary .chev{transform:rotate(90deg)}
     <button type="button" class="grp me" data-g="me"><span class="gi" aria-hidden="true">👤</span><span>My game</span><span class="gbadge" id="gbadge"></span></button>
     <button type="button" class="grp" data-g="plan"><span class="gi" aria-hidden="true">🧮</span><span>Plan</span></button>
     <button type="button" class="grp" data-g="look"><span class="gi" aria-hidden="true">📖</span><span>Look up</span><span class="ndot g" id="gdot" hidden></span></button>
+    <button type="button" class="grp" data-g="guild" id="g-guild" hidden><span class="gi" aria-hidden="true">🛡️</span><span>Guild</span></button>
     <button type="button" class="grp" data-g="help" id="g-help"><span class="gi" aria-hidden="true">🤝</span><span>Contribute</span></button>
   </nav>
   <nav class="tabs" role="tablist" aria-label="Sections">
@@ -1713,7 +1716,7 @@ document.getElementById('subform').addEventListener('submit',async e=>{ e.preven
   subBusy=false; btn.disabled=false; });
 
 const VIEWS=['gilde','planer','gebaeude','bibliothek','mein','rezepte','cruise','sim','ausbau','level','wiki','news','submit','check'];
-const GROUPS={me:['gebaeude','bibliothek','mein'],plan:['planer','cruise','sim','gilde'],look:['rezepte','ausbau','level','wiki','news'],help:['submit','check']};
+const GROUPS={me:['gebaeude','bibliothek','mein'],plan:['planer','cruise','sim'],look:['rezepte','ausbau','level','wiki','news'],help:['submit','check'],guild:['gilde']};
 const NEWS=[
  {d:'2026-11-19',de:['Kreuzfahrt: Tasse Kaffee Tier 2 und 3 mit Screenshots bestätigt und Herzen ergänzt (129 und 151).','Spielversion 1.3.40355: Das Update brachte nur Verbesserungen im Hintergrund, die Spielwerte sind unverändert.','Bibliothek: Kosten ergänzt für Schwimmender Markt Stifte I (Level 4), Reis I (Level 3) und Schiff Bücher II (Level 4).','Kreuzfahrt: Marimba Tier 6 (648 Punkte) und Jacke Tier 6 (x180, 270 Punkte) ergänzt; Steppdecke Tier 5 korrigiert (1’210 statt 1’037 Punkte).','Kreuzfahrt: 15 Aufgaben mit Screenshots bestätigt und Herzen ergänzt. Korrigiert: Eiskaffee x104 ist Tier 4 und x112 Tier 5, Katana x30 ist Tier 3 und x33 Tier 4.','Kreuzfahrt: Hängematte korrigiert – 1’296 Punkte ist Tier 1, 1’426 Punkte ist Tier 2 (nicht Tier 5).'],
   en:['Cruise: Cup of coffee tier 2 and 3 confirmed with screenshots, hearts added (129 and 151).','Game version 1.3.40355: the update only brought background improvements, game values are unchanged.','Library: costs added for Floating Market pens I (level 4), rice I (level 3) and ship books II (level 4).','Cruise: marimba tier 6 (648 points) and jacket tier 6 (x180, 270 points) added; quilt tier 5 corrected (1,210 instead of 1,037 points).','Cruise: 15 tasks confirmed with screenshots and hearts added. Fixed: iced coffee x104 is tier 4 and x112 tier 5, katana x30 is tier 3 and x33 tier 4.','Cruise: hammock corrected – 1,296 points is tier 1, 1,426 points is tier 2 (not tier 5).']},
@@ -1787,7 +1790,7 @@ function show(v){ if(v==='gilde'&&!BETA) v='planer'; { const m=/^check-(prod|coi
   document.querySelectorAll('.grp').forEach(g=>g.setAttribute('aria-pressed',String(g.dataset.g===curGroup)));
   document.querySelectorAll('.tab').forEach(t=>{ t.hidden=groupOf(t.dataset.v)!==curGroup||(t.id==='t-submit'&&!WEB); });
   document.querySelector('.tabs').hidden=GROUPS[curGroup].filter(x=>x!=='submit'||WEB).length<2;
-  if(!WEB){ const tc=document.getElementById('t-check'); if(tc) tc.hidden=true; } { const tg=document.getElementById('t-gilde'); if(tg&&!BETA) tg.hidden=true; }
+  if(!WEB){ const tc=document.getElementById('t-check'); if(tc) tc.hidden=true; } { const gg=document.getElementById('g-guild'); if(gg){ gg.hidden=!BETA; document.querySelector('.groups').classList.toggle('g5',BETA); } }
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
   curView=v; if(stale.has(v)){ stale.delete(v); RENDER[v](); } renderSetup(); }
