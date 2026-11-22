@@ -1250,6 +1250,7 @@ function ctLine(){ const c=ctInfo();
   return c.live?GL(`🛳️ Kreuzfahrt-Turnier läuft (${ctFmt(c.s)}–${ctFmt(c.e)})`,`🛳️ Cruise tournament running (${ctFmt(c.s)}–${ctFmt(c.e)})`)
     :GL(`📅 Nächstes Kreuzfahrt-Turnier: ${ctFmt(c.s)}–${ctFmt(c.e)}`,`📅 Next cruise tournament: ${ctFmt(c.s)}–${ctFmt(c.e)}`); }
 /* ---- state ---- G = what is shown; demo lives in this browser, live comes from the database */
+let GADM=null, gAdmOpen=false;
 let G=null, GDEMO=false, gEdit=false, gBusy=false, gErr='', GLIST=null, GCUR=null, gNew=false;
 try{ localStorage.removeItem('sic-guild-beta'); }catch(_){}
 function gPending(){ try{ return localStorage.getItem('sic-gjoin')||''; }catch(_){ return ''; } }
@@ -1262,7 +1263,7 @@ function gDemo(){ const T=(isl,item,tier,who)=>{ const x=CRUISE.find(c=>c[0]===i
     arch:[{title:GL('Kreuzfahrt-Turnier 26.10.–2.11.','Cruise tournament 26 Oct–2 Nov'),tasks:[T('Tropicalis','Poncho',6,['Lina'])]}]}; }
 /* ---- database ---- */
 async function gq(p){ const r=await p; if(r.error) throw r.error; return r.data; }
-async function gLoadList(){ GLIST=await gq(SB.from('guild_members').select('guild_id,role,ign,guilds(name)').eq('user_id',SBUSER.id));
+async function gLoadList(){ GLIST=await gq(SB.from('guild_members').select('guild_id,role,ign,guilds(name)').eq('user_id',SBUSER.id)); GLIST=GLIST.filter(x=>x.guilds);
   if(!GLIST.find(x=>x.guild_id===GCUR)){ let last=''; try{ last=localStorage.getItem('sic-gcur')||''; }catch(_){} GCUR=(GLIST.find(x=>x.guild_id===last)||GLIST[0]||{}).guild_id||null; } }
 async function gLoad(){ if(!GCUR){ G=null; return; } const gid=GCUR; try{ localStorage.setItem('sic-gcur',gid); }catch(_){}
   const [g,mem,evs,tasks,sus]=await Promise.all([gq(SB.from('guilds').select('name,rules').eq('id',gid).single()),gq(SB.from('guild_members').select('user_id,ign,role').eq('guild_id',gid)),
@@ -1299,6 +1300,11 @@ function gFill(){ const a=document.getElementById('gat'); if(!a) return; const T
   document.getElementById('ghint').textContent=x&&x[0]!=null&&x[1]&&x[1]!=='?'?GL('Aus unseren Daten übernommen – du kannst die Zahlen anpassen.','Filled from our data – you can adjust the numbers.'):GL('Diese Stufe fehlt in unseren Daten – bitte Zahlen aus dem Spiel eintragen.','This tier is missing in our data – please enter the numbers from the game.'); }
 function gCreateCard(){ return `<div class="card"><h3>${GL('Gilde eröffnen','Create a guild')}</h3><p class="gmeta" style="margin:0 0 10px">${GL('Als Leiter erfasst du Aufgaben und Regeln für die Kreuzfahrt. Deine Mitglieder treten über einen Link bei. Sichtbar ist nur der Ingame-Name.','As leader you add cruise tasks and rules. Your members join through a link. Only in-game names are visible.')}</p>
   <div class="gform"><label>${GL('Name der Gilde','Guild name')}<input class="inp" id="ggn" maxlength="40"></label><label>${GL('Dein Ingame-Name','Your in-game name')}<input class="inp" id="gme" maxlength="30"></label><button class="btn" id="gnew">${GL('Eröffnen','Create')}</button></div></div>`; }
+function gAdminCard(){ if(!ISADMIN||GDEMO) return ''; const roles='';
+  return `<details class="card" id="gadm"${gAdmOpen?' open':''}><summary><b>🛠️ ${GL('Admin: alle Gilden','Admin: all guilds')}</b>${GADM?` <span class="gmeta">(${GADM.length})</span>`:''}</summary>
+  ${GADM===null?`<div class="gmeta" style="margin-top:8px">${GL('Lade …','Loading …')}</div>`:GADM.length?GADM.map(g=>`<div class="grow"><div style="flex:1;min-width:0"><b>${esc(g.name)}</b><div class="gmeta">${GL('Leiter','Leader')}: ${esc(g.leader||'–')} · ${g.members} ${GL('Mitglieder','members')} · ${g.tasks} ${GL('Aufgaben','tasks')} · ${new Date(g.created_at).toLocaleDateString(LANG==='de'?'de-CH':'en-GB')}</div></div><button class="pill" data-gadel="${g.id}" data-ganame="${esc(g.name)}">🗑 ${GL('Löschen','Delete')}</button></div>`).join(''):`<div class="gmeta" style="margin-top:8px">${GL('Noch keine Gilden.','No guilds yet.')}</div>`}
+  <div style="margin-top:8px"><button class="pill" id="gadmr">↻ ${GL('Aktualisieren','Refresh')}</button></div></details>`; }
+async function gAdmLoad(){ try{ GADM=await gq(SB.rpc('admin_guilds')); }catch(e){ GADM=[]; gErr=GL('Admin-Übersicht nicht verfügbar – wurde supabase/guilds-admin.sql ausgeführt?','Admin overview not available – did you run supabase/guilds-admin.sql?'); } renderGilde(); }
 function renderGilde(){ const el=document.getElementById('gilde'); if(!el) return;
   const credit=`<div class="gmeta" style="text-align:center;margin-top:4px">💛 ${GL('Inspiriert von LL Lina','Inspired by LL Lina')}</div>`;
   const err=gErr?`<div class="gbeta" style="border-color:#c33">${esc(gErr)}</div>`:'';
@@ -1313,6 +1319,7 @@ function renderGilde(){ const el=document.getElementById('gilde'); if(!el) retur
   if(!GLIST||!GLIST.length||gNew){ el.innerHTML=`<div class="gd">${err}${gCreateCard()}${gNew?`<button class="pill" id="gnewx">${GL('Zurück','Back')}</button>`:demoBtn}${credit}</div>`; return; }
   if(!G){ el.innerHTML=`<div class="gd">${err}<div class="card gmeta">${GL('Lade Gilde …','Loading guild …')}</div></div>`; return; }
   el.innerHTML=gMain(err,credit); }
+const _rg=renderGilde; renderGilde=function(){ _rg(); const el=document.getElementById('gilde'); if(el&&WEB&&SBUSER&&ISADMIN&&!GDEMO){ const d=el.querySelector('.gd'); if(d) d.insertAdjacentHTML('beforeend',gAdminCard()); if(GADM===null&&gAdmOpen) gAdmLoad(); } };
 function gMain(err,credit){ const E=G.ev; const roles={lead:GL('Leiter','Leader'),co:GL('Co-Leiter','Co-leader'),mem:GL('Mitglied','Member')};
   const top=G.demo?`<div class="gbeta">🧪 ${GL('Beispiel-Gilde: nur in diesem Browser. Oben kannst du die Rolle wechseln.','Example guild: this browser only. Switch the role above to try it.')} <button class="pill" id="gdemox">${GL('Beispiel schliessen','Close example')}</button></div>`:'';
   const sel=!G.demo&&GLIST&&GLIST.length>1?`<select class="inp" id="gsel" style="width:auto">${GLIST.map(x=>`<option value="${x.guild_id}"${x.guild_id===GCUR?' selected':''}>${esc(x.guilds?x.guilds.name:'?')}</option>`).join('')}</select>`:'';
@@ -1333,6 +1340,7 @@ function gMain(err,credit){ const E=G.ev; const roles={lead:GL('Leiter','Leader'
   ${G.demo?'':`<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button class="pill" id="gnewg">＋ ${GL('Weitere Gilde eröffnen','Create another guild')}</button>${G.role==='lead'?`<button class="pill" id="gdelg">${GL('Gilde löschen','Delete guild')}</button>`:`<button class="pill" id="gleave">${GL('Gilde verlassen','Leave guild')}</button>`}</div>`}
   ${credit}</div>`; }
 /* ---- actions ---- */
+document.addEventListener('toggle',e=>{ if(e.target.id==='gadm'){ gAdmOpen=e.target.open; if(gAdmOpen&&GADM===null) gAdmLoad(); } },true);
 document.addEventListener('change',e=>{ if(e.target.id==='gat'||e.target.id==='gtr') gFill(); if(e.target.id==='gsel'){ GCUR=e.target.value; G=null; gRefresh(); } });
 async function gAct(b){ const L=!G||G.demo; const T=i=>G.ev.tasks[+i];
   if(b.id==='signin'){ return; }
@@ -1341,6 +1349,8 @@ async function gAct(b){ const L=!G||G.demo; const T=i=>G.ev.tasks[+i];
   if(b.id==='gjno'){ gSetPending(''); return 'r'; }
   if(b.id==='gnewg'){ gNew=true; return 'r'; } if(b.id==='gnewx'){ gNew=false; return 'r'; }
   if(b.id==='grefresh') return gRefresh();
+  if(b.id==='gadmr'){ GADM=null; return gAdmLoad(); }
+  if(b.dataset.gadel){ if(prompt(GL('Zum Löschen den Gildennamen eingeben:','Type the guild name to delete it:'))!==b.dataset.ganame) return; await gq(SB.rpc('admin_delete_guild',{gid:b.dataset.gadel})); GADM=null; if(GCUR===b.dataset.gadel){ G=null; GCUR=null; } await gAdmLoad(); return gRefresh(); }
   if(b.id==='gnew'){ const n=document.getElementById('ggn').value.trim(), m=document.getElementById('gme').value.trim(); if(!n||!m){ gErr=GL('Bitte Gildenname und Ingame-Namen eingeben.','Enter a guild name and your in-game name.'); return 'r'; }
     const gid=await gq(SB.rpc('create_guild',{gname:n,my_ign:m})); await gq(SB.from('guild_events').insert({guild_id:gid,title:ctTitle()})); GCUR=gid; gNew=false; G=null; return gRefresh(); }
   if(b.id==='gjoin'){ const m=document.getElementById('gjn').value.trim(); if(!m){ gErr=GL('Bitte deinen Ingame-Namen eingeben.','Enter your in-game name.'); return 'r'; }
