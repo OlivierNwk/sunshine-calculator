@@ -1263,7 +1263,7 @@ function gDemo(){ const T=(isl,item,tier,who)=>{ const x=CRUISE.find(c=>c[0]===i
     arch:[{title:GL('Kreuzfahrt-Turnier 26.10.–2.11.','Cruise tournament 26 Oct–2 Nov'),tasks:[T('Tropicalis','Poncho',6,['Lina'])]}]}; }
 /* ---- database ---- */
 async function gq(p){ const r=await p; if(r.error) throw r.error; return r.data; }
-async function gLoadList(){ GLIST=await gq(SB.from('guild_members').select('guild_id,role,ign,guilds(name)').eq('user_id',SBUSER.id)); GLIST=GLIST.filter(x=>x.guilds);
+async function gLoadList(){ GLIST=await gq(SB.from('guild_members').select('guild_id,role,ign,guilds(name)').eq('user_id',SBUSER.id)); GLIST=GLIST.filter(x=>x.guilds&&x.guilds.name);
   if(!GLIST.find(x=>x.guild_id===GCUR)){ let last=''; try{ last=localStorage.getItem('sic-gcur')||''; }catch(_){} GCUR=(GLIST.find(x=>x.guild_id===last)||GLIST[0]||{}).guild_id||null; } }
 async function gLoad(){ if(!GCUR){ G=null; return; } const gid=GCUR; try{ localStorage.setItem('sic-gcur',gid); }catch(_){}
   const [g,mem,evs,tasks,sus]=await Promise.all([gq(SB.from('guilds').select('name,rules').eq('id',gid).single()),gq(SB.from('guild_members').select('user_id,ign,role').eq('guild_id',gid)),
