@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wie genau sind die Zahlen? – Sunshine Island Rechner</title><link rel="stylesheet" href="legal.css"><link rel="icon" href="favicon.ico" sizes="any"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wie genau sind die Zahlen? – Sunshine Island Tools</title><link rel="stylesheet" href="legal.css"><link rel="icon" href="favicon.ico" sizes="any"><link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <style>.lang{display:flex;gap:6px;margin-bottom:14px}.lang button{border:1px solid #E3DED2;background:#fff;border-radius:8px;padding:5px 10px;font-weight:600;cursor:pointer;color:#5E716F}.lang button[aria-pressed=true]{background:#0B7A80;color:#fff;border-color:#0B7A80}[data-l]{display:none}body.de [data-l=de],body.en [data-l=en]{display:block}.k{display:inline-block;font-size:12px;font-weight:700;padding:1px 7px;border-radius:999px}.ok{background:#E3F4EA;color:#1F7A47}.un{background:#F1F2F4;color:#5B6472}.su{background:#FDECDC;color:#B4541A}table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0;table-layout:fixed;overflow-wrap:anywhere}td,th{border-bottom:1px solid #E3DED2;padding:6px 8px;text-align:left}</style>
 </head>
 <body class="de"><main><div class="card">
@@ -74,7 +74,7 @@
 </div></main>
 <script>
 (function(){ var l='de'; try{ l=localStorage.getItem('sic-lang')||(/^de/i.test(navigator.language||'')?'de':'en'); }catch(e){}
-function set(x){ l=x; document.body.className=x; document.documentElement.lang=x; document.title=x==='de'?'Wie genau sind die Zahlen? – Sunshine Island Rechner':'How accurate are the numbers? – Sunshine Island Calculator';
+function set(x){ l=x; document.body.className=x; document.documentElement.lang=x; document.title=x==='de'?'Wie genau sind die Zahlen? – Sunshine Island Tools':'How accurate are the numbers? – Sunshine Island Tools';
   document.querySelectorAll('[data-set]').forEach(function(b){ b.setAttribute('aria-pressed',String(b.dataset.set===x)); }); try{ localStorage.setItem('sic-lang',x); }catch(e){} }
 document.querySelectorAll('[data-set]').forEach(function(b){ b.onclick=function(){ set(b.dataset.set); }; }); set(l); })();
 </script>
