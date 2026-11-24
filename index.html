@@ -315,6 +315,15 @@ details.wb[open]>summary .chev{transform:rotate(90deg)}
 .simtools input{flex:1;min-width:120px}
 .simzoom{display:flex;gap:4px;margin-left:auto}
 .simzoom button{width:38px;height:38px;border-radius:10px;font-size:20px;font-weight:800}
+.simstore{border:1.5px dashed var(--line);border-radius:12px;padding:8px 10px;margin:6px 0 8px;transition:background .15s}
+.simstore.drop{background:rgba(11,122,128,.12);border-color:#0B7A80}
+.simstoreh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.simstorel{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.simst{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:4px 8px;cursor:grab;flex:none;touch-action:pan-x;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.simst[aria-pressed="true"]{border-color:var(--accent)}
+.simst img{width:32px;height:32px;object-fit:contain}.simst .t{display:block;font-weight:700;font-size:12.5px}.simst .s{display:block;font-size:11.5px;color:var(--muted)}
+.simb{-webkit-touch-callout:none;-webkit-user-select:none}#v-sim img{-webkit-user-drag:none;user-drag:none}.simb.dragging{opacity:.35}
+.simfloat{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-130%);background:var(--accent,#0B7A80);color:#fff;font-size:12px;font-weight:700;padding:4px 8px;border-radius:8px;white-space:nowrap}
 .simact{position:sticky;bottom:0;z-index:5;background:var(--surface);border-top:1px solid var(--line);padding:10px 0 4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .simact:empty{display:none}
 .simact .pill{min-height:40px;padding:0 14px}
@@ -1677,6 +1686,90 @@ document.getElementById('v-sim').addEventListener('click',e=>{
   else if(t=e.target.closest('#simvdel')){ const L=simV(z.isl); if(L.length<2) return; const v=L.find(x=>x.id===z.va[z.isl]); if(!confirm(VT('del').replace('%s',v.n))) return; z.vs[z.isl]=L.filter(x=>x!==v); z.va[z.isl]=null; simLoad(z.isl,z.vs[z.isl][0].id); renderSim(); persist(); }
   else if(t=e.target.closest('#simreset')){ z.d[z.isl]=null; simS(); simSel=null; simPend=null; renderSim(); persist(); }
 });
+/* ---- Beta: drag & drop, storage, undo ---- */
+const SIMB=/\/beta\//.test(location.pathname);
+const SU=(de,en)=>LANG==='de'?de:en;
+let simUndo=[], simDrag=null, simNoClick=false;
+function simD(){ const z=simS(); const d=z.d[z.isl]; d.st=d.st||[]; return d; }
+function simPush(){ const d=simD(); simUndo.push(JSON.stringify({isl:simS().isl,b:d.b,st:d.st,own:d.own})); if(simUndo.length>40) simUndo.shift(); }
+function simDoUndo(){ const isl=simS().isl; for(let i=simUndo.length-1;i>=0;i--){ const s=JSON.parse(simUndo[i]); if(s.isl!==isl) continue; simUndo.splice(i,1); const d=simD(); d.b=s.b; d.st=s.st; d.own=s.own; simSel=null; simPend=null; simGhost=null; renderSim(); persist(); return; } simHint(SU('Nichts rückgängig zu machen.','Nothing to undo.')); }
+function simHint(t,bad){ const h=document.getElementById('simhint'); if(h) h.innerHTML=bad?`<span style="color:var(--bad)">${t}</span>`:t; }
+function simStoreHtml(){ const d=simD(); const g={}; d.st.forEach((p,i)=>{ (g[p.n]=g[p.n]||[]).push(i); });
+  const names=Object.keys(g);
+  return `<div class="simstoreh"><b>📦 ${SU('Lager','Storage')}</b>${d.st.length?` <span class="lbl">${d.st.length} ${SU('Gebäude','buildings')}</span>`:''}<span style="flex:1"></span><button class="pill" type="button" id="simall">📦 ${SU('Alles ins Lager','Store everything')}</button><button class="pill" type="button" id="simundo">↶ ${SU('Rückgängig','Undo')}</button></div>
+  <div class="simstorel">${names.length?names.map(n=>{ const L=g[n].map(i=>d.st[i]); const b=simB(n); const img=b?(WI[b.img]||(appName(b)&&ICMAP.b[appName(b)]&&WI[ICMAP.b[appName(b)]])||''):'';
+    return `<button type="button" class="simst" data-stn="${esc(n)}" aria-pressed="${!!(simPend&&simPend.store!=null&&d.st[simPend.store]&&d.st[simPend.store].n===n)}">${img?`<img src="${img}" alt="">`:''}<span><span class="t">${esc(GN(n))} ×${L.length}</span><span class="s">Lv ${L.map(p=>p.lv).sort((a,b)=>b-a).join(', ')}</span></span></button>`; }).join(''):`<span class="lbl">${SU('Leer. Ziehe Gebäude hierher oder tippe beim Gebäude auf «Ins Lager».','Empty. Drag buildings here or tap “To storage” on a building.')}</span>`}</div>`; }
+function simStoreTake(n){ const d=simD(); let best=-1; d.st.forEach((p,i)=>{ if(p.n===n&&(best<0||p.lv>d.st[best].lv)) best=i; }); return best; }
+function simToStore(i){ const d=simD(); const p=d.b.splice(i,1)[0]; d.st.push(p); simSel=null; }
+/* render hook */
+const _renderSim=renderSim;
+renderSim=function(){ _renderSim(); if(!SIMB||!WREADY) return; let el=document.getElementById('simstore');
+  if(!el){ el=document.createElement('div'); el.id='simstore'; el.className='simstore'; const sc=document.getElementById('simscroll'); sc.parentNode.insertBefore(el,sc); }
+  el.innerHTML=simStoreHtml();
+  const insp=document.getElementById('siminsp'); const d=simD();
+  if(simSel!=null&&d.b[simSel]&&insp&&!insp.querySelector('[data-sstore]')){ const mv=insp.querySelector('[data-smove]'); if(mv) mv.remove(); insp.insertAdjacentHTML('beforeend',`<button class="pill" type="button" data-sstore="1">📦 ${SU('Ins Lager','To storage')}</button>`); }
+  if(!simPend&&simMode==='build') simHint(innerWidth<=980||simTouch?SU('Gebäude kurz gedrückt halten und ziehen. Antippen zum Bearbeiten.','Press and hold a building, then drag it. Tap to edit.'):SU('Gebäude mit der Maus ziehen, um sie zu verschieben. Klicken zum Bearbeiten. Ctrl + Z macht rückgängig.','Drag buildings with the mouse to move them. Click to edit. Ctrl + Z undoes.'));
+  if(simPend&&simPend.store!=null) simHint(SU(`Platziere <b>${esc(simPend.n)}</b> aus dem Lager – tippe auf die Insel.`,`Placing <b>${esc(simPend.n)}</b> from storage – tap the island.`));
+  const ones=new Set(d.b.map(p=>p.n).concat(d.st.map(p=>p.n)));
+  document.querySelectorAll('#v-sim [data-sp]').forEach(btn=>{ const n=btn.dataset.sp; const b=simB(n); const once=b&&(b.type==='One Time Build'||/Townhall|Library|Marketplace|Warehouse/.test(b.n)); if(once&&ones.has(n)){ btn.disabled=true; btn.style.opacity='.45'; } });
+};
+/* placement from storage via tap */
+const _simPlace=simPlace;
+simPlace=function(d,x,y){ if(simPend&&simPend.store!=null){ simPush(); const p=d.st.splice(simPend.store,1)[0]; Object.assign(p,{x,y,w:simPend.w,h:simPend.h}); d.b.push(p); simSel=d.b.length-1; simPend=null; simGhost=null; renderSim(); persist(); return; }
+  simPush(); return _simPlace(d,x,y); };
+/* buttons */
+document.getElementById('v-sim').addEventListener('click',e=>{ if(!SIMB) return; const d=simD(); let t;
+  if(t=e.target.closest('#simall')){ if(!d.b.length) return; simPush(); d.st=d.st.concat(d.b); d.b=[]; simSel=null; simPend=null; renderSim(); persist(); simHint(SU('Insel geleert. Ziehe die Gebäude aus dem Lager zurück – Level und Rezept bleiben.','Island cleared. Drag the buildings back from storage – level and recipe are kept.')); }
+  else if(t=e.target.closest('#simundo')) simDoUndo();
+  else if(t=e.target.closest('[data-sstore]')){ if(simSel==null) return; simPush(); simToStore(simSel); renderSim(); persist(); }
+  else if(t=e.target.closest('[data-stn]')){ if(simNoClick) return; const i=simStoreTake(t.dataset.stn); if(i<0) return; const p=d.st[i]; simMode='build'; simSel=null; simPend=(simPend&&simPend.store===i)?null:{n:p.n,w:p.w,h:p.h,store:i}; simGhost=null; renderSim(); }
+},true);
+/* record undo for delete / rotate / expansions (capture phase, before the original handler) */
+document.getElementById('v-sim').addEventListener('click',e=>{ if(!SIMB) return; if(e.target.closest('[data-sdel],[data-srot="s"],#simreset,#simgame')) simPush(); },true);
+document.getElementById('simmap').addEventListener('click',e=>{ if(!SIMB) return; if(simNoClick){ e.stopImmediatePropagation(); simNoClick=false; return; } if(simMode==='expand'&&e.target.closest('[data-cell]')) simPush(); },true);
+document.addEventListener('keydown',e=>{ if(!SIMB||curView!=='sim') return; if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&e.key.toLowerCase()==='z'&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){ e.preventDefault(); simDoUndo(); } });
+/* drag & drop: map buildings, storage chips, palette items */
+function simDragStart(src,e,el){ const touch=e.pointerType!=='mouse';
+  simDrag={src,x0:e.clientX,y0:e.clientY,touch,active:false,el,timer:null,pid:e.pointerId};
+  if(touch) simDrag.timer=setTimeout(()=>{ if(simDrag&&!simDrag.active) simDragActivate(e); },380); }
+function simDragActivate(e){ const g=simDrag; g.active=true; const d=simD(); let w,h,n;
+  if(g.src.kind==='map'){ const p=d.b[g.src.i]; w=p.w; h=p.h; n=p.n; g.el.classList.add('dragging'); }
+  else if(g.src.kind==='store'){ const i=simStoreTake(g.src.n); if(i<0){ simDrag=null; return; } g.src.i=i; const p=d.st[i]; w=p.w; h=p.h; n=p.n; }
+  else { const b=simB(g.src.n); [w,h]=simSize(b); n=b.n; }
+  g.w=w; g.h=h; g.n=n; simPend=null; simGhost=null; simSel=null;
+  if(navigator.vibrate&&g.touch) try{ navigator.vibrate(15); }catch(_){}
+  const f=document.createElement('div'); f.className='simfloat'; f.textContent=GN(n); document.body.appendChild(f); g.f=f; simDragMove(e); }
+function simDragMove(e){ const g=simDrag; if(!g) return;
+  if(!g.active){ const dist=Math.hypot(e.clientX-g.x0,e.clientY-g.y0); if(g.touch){ if(dist>10){ clearTimeout(g.timer); simDrag=null; } return; } if(dist>5) simDragActivate(e); return; }
+  g.f.style.left=e.clientX+'px'; g.f.style.top=e.clientY+'px';
+  const map=document.getElementById('simmap'); const rc=map.getBoundingClientRect(); const inMap=e.clientX>=rc.left&&e.clientX<=rc.right&&e.clientY>=rc.top&&e.clientY<=rc.bottom;
+  const st=document.getElementById('simstore'); const sr=st&&st.getBoundingClientRect(); g.overStore=!!sr&&e.clientX>=sr.left&&e.clientX<=sr.right&&e.clientY>=sr.top&&e.clientY<=sr.bottom;
+  if(st) st.classList.toggle('drop',g.overStore&&g.src.kind==='map');
+  let gh=map.querySelector('.simghost'); if(!inMap){ if(gh) gh.remove(); g.t=null; return; }
+  const u=simUnit(); const {x,y}=simMapPos(e,g.w,g.h); const d=simD(); const ok=simFits(d,x,y,g.w,g.h,g.src.kind==='map'?g.src.i:undefined);
+  g.t={x,y,ok}; if(!gh){ gh=document.createElement('div'); gh.className='simghost'; map.appendChild(gh); }
+  gh.classList.toggle('bad',!ok); gh.style.cssText=`left:${x*u}px;top:${y*u}px;width:${g.w*u}px;height:${g.h*u}px`; }
+function simDragEnd(e){ const g=simDrag; simDrag=null; if(!g) return; clearTimeout(g.timer); if(!g.active) return;
+  simNoClick=true; setTimeout(()=>{ simNoClick=false; },350); if(g.f) g.f.remove(); const st=document.getElementById('simstore'); if(st) st.classList.remove('drop');
+  const d=simD();
+  if(g.src.kind==='map'&&g.overStore){ simPush(); simToStore(g.src.i); renderSim(); persist(); return; }
+  if(!g.t||!g.t.ok){ renderSim(); if(g.t) simHint(SU('Dort ist kein Platz – das Gebäude braucht freies, gekauftes Land.','No room there – it needs free, bought land.'),true); return; }
+  simPush();
+  if(g.src.kind==='map'){ const p=d.b[g.src.i]; p.x=g.t.x; p.y=g.t.y; simSel=g.src.i; }
+  else if(g.src.kind==='store'){ const p=d.st.splice(g.src.i,1)[0]; Object.assign(p,{x:g.t.x,y:g.t.y}); d.b.push(p); simSel=d.b.length-1; }
+  else { const b=simB(g.src.n); const recs=simRec({n:b.n}); d.b.push({n:b.n,x:g.t.x,y:g.t.y,w:g.w,h:g.h,lv:1,rec:(recs.find(r=>/Regular/.test(r.p))||recs[0]||{}).p||null}); simSel=d.b.length-1; }
+  renderSim(); persist(); }
+document.addEventListener('pointerdown',e=>{ if(!SIMB||curView!=='sim'||simMode!=='build'||e.button>0) return; let el;
+  if(el=e.target.closest('#simmap [data-sb]')) simDragStart({kind:'map',i:+el.dataset.sb},e,el);
+  else if(el=e.target.closest('#simstore [data-stn]')) simDragStart({kind:'store',n:el.dataset.stn},e,el);
+  else if((el=e.target.closest('#v-sim [data-sp]'))&&!el.disabled) simDragStart({kind:'new',n:el.dataset.sp},e,el); });
+document.addEventListener('pointermove',e=>{ if(simDrag) simDragMove(e); });
+document.addEventListener('pointerup',e=>{ if(simDrag) simDragEnd(e); });
+document.addEventListener('pointercancel',()=>{ if(simDrag){ clearTimeout(simDrag.timer); if(simDrag.f) simDrag.f.remove(); simDrag=null; renderSim(); } });
+document.addEventListener('touchmove',e=>{ if(simDrag&&simDrag.active) e.preventDefault(); },{passive:false});
+document.addEventListener('dragstart',e=>{ if(SIMB&&e.target.closest&&e.target.closest('#v-sim')) e.preventDefault(); });
+document.addEventListener('contextmenu',e=>{ if(simDrag) e.preventDefault(); });
+
 document.getElementById('v-sim').addEventListener('change',e=>{ const z=simS(); const d=z.d[z.isl]; const t=e.target;
   if(t.dataset.srec!=null){ d.b[+t.dataset.srec].rec=t.value; renderSim(); persist(); }
   else if(t.dataset.f2==='simlv'){ const p=d.b[simSel]; const b=simB(p.n); const max=parseInt(b.max)||(b.u.length||b.d.length)||1; p.lv=Math.max(1,Math.min(max,parseInt(t.value)||1)); renderSim(); persist(); } });
