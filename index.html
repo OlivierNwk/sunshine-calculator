@@ -737,8 +737,13 @@ async function zip(str,inflate){ const cs=inflate?new DecompressionStream('defla
 async function simShareLink(){ const z=simS(); const isl=z.isl; const d=z.d[isl];
   const o={v:1,isl,own:d.own,b:d.b,hrs:z.hrs||null,lib:z.lib||null};
   let code; try{ code='z'+b64u.enc(await zip(JSON.stringify(o))); }catch(e){ code='j'+b64u.enc(new TextEncoder().encode(JSON.stringify(o))); }
-  return location.origin+location.pathname+'#sim='+code; }
-async function readShare(){ const m=/#sim=([A-Za-z0-9_-]+)/.exec(location.hash||''); if(!m) return null;
+  const long=location.origin+location.pathname+'#sim='+code;
+  if(WEB&&SB&&SBUSER){ try{ const r=await SB.rpc('create_sim_share',{d:o}); if(!r.error&&r.data) return location.origin+location.pathname+'#s='+r.data; }catch(e){} }
+  return long; }
+async function readShare(){ const s=/#s=([A-Za-z0-9]{5,12})$/.exec(location.hash||'');
+  if(s){ if(!WEB) return null; try{ SB=SB||window.supabase.createClient(SIC_CONFIG.supabaseUrl,SIC_CONFIG.supabaseKey); const r=await SB.rpc('get_sim_share',{sid:s[1]}); const o=r.data;
+      if(r.error||!o||!ISLS.includes(o.isl)||!Array.isArray(o.own)||!Array.isArray(o.b)) return null; return o; }catch(e){ console.warn('share',e); return null; } }
+  const m=/#sim=([A-Za-z0-9_-]+)/.exec(location.hash||''); if(!m) return null;
   try{ const c=m[1]; const raw=c[0]==='z'?await zip(b64u.dec(c.slice(1)),true):new TextDecoder().decode(b64u.dec(c.slice(1)));
     const o=JSON.parse(raw); if(!o||!ISLS.includes(o.isl)||!Array.isArray(o.own)||!Array.isArray(o.b)) return null; return o; }catch(e){ console.warn('share',e); return null; } }
 function applyShare(){ if(!SHARE) return; SIMBACK=JSON.parse(JSON.stringify(S.sim||{}));
@@ -785,7 +790,7 @@ document.addEventListener('click',async e=>{ if(!SB) return;
   if(e.target.closest('#signin')){ try{ if(e.target.closest('#gilde')) localStorage.setItem('sic-after-login','gilde'); }catch(_){} await SB.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+location.pathname}}); }
   else if(e.target.closest('#signout')){ await SB.auth.signOut(); location.reload(); } });
 async function initWeb(){
-  SB=window.supabase.createClient(SIC_CONFIG.supabaseUrl,SIC_CONFIG.supabaseKey);
+  SB=SB||window.supabase.createClient(SIC_CONFIG.supabaseUrl,SIC_CONFIG.supabaseKey);
   loadOverrides();
   const timer=setTimeout(()=>{ if(mode==='loading'){ mode='local'; loadLocal(); renderAll(); setSave('local','Saved in this browser only'); } },10000);
   try{
@@ -1997,7 +2002,7 @@ async function loadWiki(){
 renderAll();
 { let h=location.hash.slice(1); try{ if(!h&&(localStorage.getItem('sic-after-login')==='gilde'||localStorage.getItem('sic-gjoin'))) h='gilde'; localStorage.removeItem('sic-after-login'); }catch(_){} show(h); }
 (async()=>{ SHARE=await readShare(); if(SHARE){ applyShare(); } await initStore(); if(SHARE){ if(SIMBACK===null) applyShare(); renderShareBar(); const t=document.getElementById('t-sim'); if(t) t.click(); try{ renderSim(); }catch(e){} } })(); i18nAll();
-window.addEventListener('hashchange',()=>{ if(/#sim=/.test(location.hash)) location.reload(); });
+window.addEventListener('hashchange',()=>{ if(/#(sim|s)=/.test(location.hash)) location.reload(); });
 document.addEventListener('click',async e=>{
   if(e.target.closest('#sharekeep')) return endShare(true);
   if(e.target.closest('#shareclose')) return endShare(false);
