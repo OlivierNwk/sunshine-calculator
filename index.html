@@ -1703,9 +1703,9 @@ function simStoreTake(n){ const d=simD(); let best=-1; d.st.forEach((p,i)=>{ if(
 function simToStore(i){ const d=simD(); const p=d.b.splice(i,1)[0]; d.st.push(p); simSel=null; }
 /* render hook */
 const _renderSim=renderSim;
-renderSim=function(){ _renderSim(); if(!SIMB||!WREADY) return; let el=document.getElementById('simstore');
+renderSim=function(){ const _sl=document.querySelector('#simstore .simstorel'); const _sx=_sl?_sl.scrollLeft:0; _renderSim(); if(!SIMB||!WREADY) return; let el=document.getElementById('simstore');
   if(!el){ el=document.createElement('div'); el.id='simstore'; el.className='simstore'; const sc=document.getElementById('simscroll'); sc.parentNode.insertBefore(el,sc); }
-  el.innerHTML=simStoreHtml();
+  el.innerHTML=simStoreHtml(); { const l=el.querySelector('.simstorel'); if(l&&_sx) l.scrollLeft=_sx; }
   const insp=document.getElementById('siminsp'); const d=simD();
   if(simSel!=null&&d.b[simSel]&&insp&&!insp.querySelector('[data-sstore]')){ const mv=insp.querySelector('[data-smove]'); if(mv) mv.remove(); insp.insertAdjacentHTML('beforeend',`<button class="pill" type="button" data-sstore="1">📦 ${SU('Ins Lager','To storage')}</button>`); }
   if(!simPend&&simMode==='build') simHint(innerWidth<=980||simTouch?SU('Gebäude kurz gedrückt halten und ziehen. Antippen zum Bearbeiten.','Press and hold a building, then drag it. Tap to edit.'):SU('Gebäude mit der Maus ziehen, um sie zu verschieben. Klicken zum Bearbeiten. Ctrl + Z macht rückgängig.','Drag buildings with the mouse to move them. Click to edit. Ctrl + Z undoes.'));
