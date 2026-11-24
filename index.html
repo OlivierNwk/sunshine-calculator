@@ -1982,7 +1982,7 @@ window.addEventListener('hashchange',()=>show(location.hash.slice(1)));
 const RENDER={gilde:renderGilde,check:renderCheck,news:renderNews,mein:()=>{renderHpct();},planer:renderPlan,gebaeude:renderBlds,bibliothek:renderLib,rezepte:()=>{renderRecFilter();renderRecs();},cruise:renderCruise,sim:renderSim,ausbau:renderAusbau,level:renderLevel,wiki:renderWiki,submit:renderSubmit};
 const stale=new Set(); let curView='planer';
 function lazy(v){ if(v===curView){ stale.delete(v); RENDER[v](); } else stale.add(v); }
-function renderAll(){ Object.keys(RENDER).forEach(lazy); }
+function renderAll(){ Object.keys(RENDER).forEach(lazy); try{ renderSetup(); }catch(_){} }
 async function loadWiki(){
   try{
     const w=await fetch('wiki.json').then(r=>r.json());
